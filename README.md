@@ -1,4 +1,4 @@
-# Career & Lifelong Learning Pathway Application
+# Career & Lifelong Learning Pathway (CaLLP) Application
 
 A web application designed to help Cal Poly Humboldt students and alumni identify career-related skill development needs, discover relevant external learning resources, and plan their learning around personal goals and availability.
 
@@ -21,6 +21,8 @@ The application does not host its own learning modules or lessons.
 ## Documentation
 
 Project documentation is maintained in the [`docs/`](docs/) directory.
+
+- Software Requirement Specification Document
 
 ## Contributing
 
