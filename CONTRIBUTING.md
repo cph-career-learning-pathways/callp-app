@@ -5,7 +5,7 @@
 For commonly used Git commands, see [Git Workflow Command Reference](docs/git-workflow.md).
 
 1. Select or create an Issue in the repository.
-2. Assign the Issue and set its Area, Type, Priority, Target, and Iteration when known.
+2. Assign the Issue and set its Labels, Type, Priority, and Target Date (at minimum).
 3. Set the Issue to **In Progress** when beginning work.
 4. Create a branch from the latest `main`.
 5. Make, test, and commit your changes on branch.
