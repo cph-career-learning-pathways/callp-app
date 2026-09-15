@@ -44,7 +44,7 @@ After pushing your branch, use **Compare & pull request** on GitHub, or go to **
 The Pull Request should target `main` and include:
 
 ```markdown
-Closes #<issue-number>
+Resolves #<issue-number>
 
 ## Summary
 
