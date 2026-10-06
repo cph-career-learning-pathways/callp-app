@@ -20,6 +20,7 @@ callp-app/
 │
 ├── docs/
 │   ├── ARCHITECTURE.md
+│   ├── INFRASTRUCTURE.md
 │   ├── AWS_ACCESS_GUIDE.md
 │   ├── DATABASE_SETUP.md
 │   ├── SE - Software Requirements Specification.pdf
@@ -37,7 +38,11 @@ callp-app/
 │   ├── asgi.py
 │   └── wsgi.py
 │
-├── landing/
+├── frontend/
+│   ├── account_page/
+│   ├── search_page/
+│   └── landing/
+│
 ├── resource_discovery/
 │
 ├── manage.py
@@ -95,6 +100,11 @@ ISSUE_TEMPLATE/
 
 ---
 
+## `docs/`
+
+Project documentation, technical references, and developer guides.
+
+```text
 docs/
 ├── ARCHITECTURE.md
 │   └── repository structure and software architecture
@@ -116,6 +126,7 @@ docs/
 │
 └── git-workflow.md
     └── team Git and branch workflow
+```
 
 ---
 
@@ -162,42 +173,78 @@ config/
 
 ---
 
-## `landing/`
+## `frontend/`
 
-Primary Django application for the CaLLP web interface.
+Contains the user-facing Django components that make up the CaLLP web
+interface.
+
+Rather than implementing the entire interface as a single monolithic Django
+application, frontend functionality is divided into modular components based
+on distinct areas of the website.
 
 ```text
-landing/
-├── migrations/
-│   └── Django-managed database schema migrations
+frontend/
+├── account_page/
+│   └── account, profile, and related user-facing functionality
 │
-├── static/
-│   └── application-specific CSS, JavaScript, images, and other static assets
+├── search_page/
+│   └── resource search and discovery interface
 │
-├── templates/
-│   └── Django HTML templates
-│
-├── admin.py
-│   └── Django administrative interface configuration
-│
-├── apps.py
-│   └── Django application configuration
-│
-├── models.py
-│   └── application data models
-│
-├── tests.py
-│   └── application tests
-│
-├── urls.py
-│   └── application URL routing
-│
-└── views.py
-    └── request handling and presentation logic
+└── landing/
+    └── landing page and associated public-facing interface
 ```
 
-The exact structure will evolve as functionality is migrated from the
-prototype.
+Each component may be implemented as its own Django application where
+appropriate. A component can therefore maintain the templates, static assets,
+URL routing, views, tests, and other application code specific to that portion
+of the website.
+
+A typical frontend component may use a structure such as:
+
+```text
+frontend/
+└── component_name/
+    ├── migrations/
+    │   └── Django-managed database schema migrations, when required
+    │
+    ├── static/
+    │   └── component-specific CSS, JavaScript, images, and other static assets
+    │
+    ├── templates/
+    │   └── component-specific Django HTML templates
+    │
+    ├── __init__.py
+    │   └── identifies the component as a Python package
+    │
+    ├── admin.py
+    │   └── Django administrative interface configuration, when required
+    │
+    ├── apps.py
+    │   └── Django application configuration
+    │
+    ├── models.py
+    │   └── component-specific data models, when required
+    │
+    ├── tests.py
+    │   └── component tests
+    │
+    ├── urls.py
+    │   └── component URL routing
+    │
+    └── views.py
+        └── request handling and presentation logic
+```
+
+Not every frontend component is required to contain every file or directory
+shown above. Components should contain only the functionality they require.
+
+Shared frontend functionality should be factored into an appropriate shared
+location rather than duplicated between components as the frontend
+architecture develops.
+
+The exact frontend component structure will evolve as functionality is
+migrated from the original prototype and additional website areas are
+implemented.
 
 ---
 
@@ -211,6 +258,14 @@ resource_discovery/
     └── resource searching, filtering, metadata extraction, and related
         discovery functionality
 ```
+
+`resource_discovery/` contains the underlying resource discovery functionality
+rather than the user-facing search interface. The corresponding presentation
+and interaction layer belongs in the appropriate component under `frontend/`,
+such as `frontend/search_page/`.
+
+This separation allows resource discovery logic to evolve independently from
+the website interface that consumes it.
 
 This section should be expanded as the prototype functionality is migrated and
 its permanent module boundaries are established.
