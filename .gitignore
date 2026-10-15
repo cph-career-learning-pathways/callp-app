@@ -1,21 +1,7 @@
+
 # =============================================================================
 # CaLLP - Career and Lifelong Learning Pathway .gitignore
 # =============================================================================
-
-
-# =============================================================================
-# TRACK (NOT IGNORED)
-# =============================================================================
-
-!.env.example
-
-!config/
-!config/**
-
-!.platform/
-!.platform/**
-
-!Procfile
 
 
 # =============================================================================
@@ -191,3 +177,25 @@ temp/
 *.crt
 *.cer
 *.csr
+
+
+# =============================================================================
+# TRACK (NOT IGNORED)
+# =============================================================================
+
+# Shared environment variable template
+!.env.example
+
+# Django configuration
+!config/
+!config/**
+
+# Elastic Beanstalk deployment configuration
+!.platform/
+!.platform/**
+
+# Elastic Beanstalk process configuration
+!Procfile
+
+# Approved local MySQL initialization scripts
+!docker/mysql/init/*.sql
