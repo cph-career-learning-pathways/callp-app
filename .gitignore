@@ -12,8 +12,14 @@
 !config/
 !config/**
 
+!.ebextensions/
+!.ebextensions/**
+
 !.platform/
 !.platform/**
+
+!infrastructure/
+!infrastructure/**
 
 !Procfile
 
@@ -157,6 +163,13 @@ temp/
 # -----------------------------------------------------------------------------
 
 .elasticbeanstalk/
+
+# Raw AWS configuration exports
+callp-current-config-*.json
+callp-recovery-template-*.json
+callp-dev-environment-candidate.json
+callp-dev-app-options.json
+callp-dev-ssm-baseline_v*.json
 
 
 # -----------------------------------------------------------------------------
