@@ -2,5 +2,6 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("test/", views.test, name="testing")
+    path("", views.index, name="index"),
+    path("resources/", views.resource_query, name="resource_query"),
 ]

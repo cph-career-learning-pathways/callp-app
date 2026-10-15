@@ -1,1 +1,10 @@
-<h1> Test Banana </h1>
+{% extends "base.html" %}
+{% block title %}Home | Django Demo{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1 class="hero-title">Welcome, {{ username|default:"Guest" }}!</h1>
+  <p class="hero-description">Django dynamically rendered this page on AWS.</p>
+  <a class="hero-link" href="{% url 'resource_query' %}">Explore Resources</a>
+</section>
+{% endblock %}
