@@ -1,0 +1,10 @@
+# Initial HTTPS setup: obtains a certificate if needed and activates Nginx TLS.
+[Unit]
+Description=Bootstrap CaLLP HTTPS
+Wants=network-online.target
+After=network-online.target nginx.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/callp-https/bootstrap_https.sh
+TimeoutStartSec=900

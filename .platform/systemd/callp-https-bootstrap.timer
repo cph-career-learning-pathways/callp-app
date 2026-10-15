@@ -1,0 +1,12 @@
+# Periodically retries initial HTTPS setup until the certificate and listener are ready.
+[Unit]
+Description=Retry CaLLP HTTPS bootstrap
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=10min
+RandomizedDelaySec=1min
+Unit=callp-https-bootstrap.service
+
+[Install]
+WantedBy=timers.target

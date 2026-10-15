@@ -1,0 +1,9 @@
+# Certificate maintenance: renews an existing TLS certificate and reloads Nginx when renewed.
+[Unit]
+Description=Renew CaLLP Let's Encrypt TLS certificate
+Wants=network-online.target
+After=network-online.target nginx.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/callp-certbot/bin/certbot renew --cert-name callp.dev --non-interactive --deploy-hook "/usr/bin/systemctl reload nginx"
