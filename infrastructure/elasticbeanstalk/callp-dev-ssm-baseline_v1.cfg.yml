@@ -1,0 +1,54 @@
+EnvironmentConfigurationMetadata:
+  Description: Verified CaLLP development environment with seven application properties,
+    SSM Parameter Store integration, persistent RDS connectivity, and tested HTTPS
+    recovery automation.
+  DateCreated: '1792092832000'
+  DateModified: '1792092832000'
+Platform:
+  PlatformArn: arn:aws:elasticbeanstalk:us-west-2::platform/Python 3.14 running on
+    64bit Amazon Linux 2023/4.13.10
+OptionSettings:
+  aws:ec2:instances:
+    InstanceTypes: t3.micro
+  aws:elasticbeanstalk:environment:
+    ServiceRole: arn:aws:iam::919551760563:role/service-role/aws-elasticbeanstalk-service-role
+    EnvironmentType: SingleInstance
+    LoadBalancerType: application
+  aws:elasticbeanstalk:healthreporting:system:
+    ConfigDocument:
+      Version: 1
+      CloudWatchMetrics:
+        Instance: {}
+        Environment: {}
+      Rules:
+        Environment:
+          ELB:
+            ELBRequests4xx:
+              Enabled: true
+          Application:
+            ApplicationRequests4xx:
+              Enabled: true
+    SystemType: enhanced
+  aws:ec2:vpc:
+    Subnets: subnet-0f27c53b50538fd78,subnet-0d7e403f95e683ca1,subnet-0c4f4b119b9dfa212,subnet-0443f1c2a35857af9
+    VPCId: vpc-0af02992f0d51bd7a
+  aws:elasticbeanstalk:application:environmentsecrets:
+    RDS_PASSWORD: arn:aws:ssm:us-west-2:919551760563:parameter/callp/dev/rds/password
+    RDS_HOSTNAME: arn:aws:ssm:us-west-2:919551760563:parameter/callp/dev/rds/host
+    RDS_PORT: arn:aws:ssm:us-west-2:919551760563:parameter/callp/dev/rds/port
+    RDS_DB_NAME: arn:aws:ssm:us-west-2:919551760563:parameter/callp/dev/rds/db_name
+    DJANGO_SECRET_KEY: arn:aws:ssm:us-west-2:919551760563:parameter/callp/dev/django/secret_key
+    RDS_USERNAME: arn:aws:ssm:us-west-2:919551760563:parameter/callp/dev/rds/username
+  aws:autoscaling:launchconfiguration:
+    SecurityGroups: sg-09bd8bca31993f340
+    DisableIMDSv1: true
+    IamInstanceProfile: aws-elasticbeanstalk-ec2-role
+  aws:elasticbeanstalk:managedactions:
+    ManagedActionsEnabled: true
+    PreferredStartTime: MON:14:25
+  aws:elasticbeanstalk:managedactions:platformupdate:
+    UpdateLevel: patch
+EnvironmentTier:
+  Type: Standard
+  Name: WebServer
+AWSConfigurationTemplateVersion: 1.1.0.0
