@@ -1,27 +1,7 @@
+
 # =============================================================================
 # CaLLP - Career and Lifelong Learning Pathway .gitignore
 # =============================================================================
-
-
-# =============================================================================
-# TRACK (NOT IGNORED)
-# =============================================================================
-
-!.env.example
-
-!config/
-!config/**
-
-!.ebextensions/
-!.ebextensions/**
-
-!.platform/
-!.platform/**
-
-!infrastructure/
-!infrastructure/**
-
-!Procfile
 
 
 # =============================================================================
@@ -204,3 +184,27 @@ callp-dev-ssm-baseline_v*.json
 *.crt
 *.cer
 *.csr
+
+
+# =============================================================================
+# TRACK (NOT IGNORED)
+# =============================================================================
+
+# Shared environment variable template
+!.env.example
+
+# Django configuration
+!config/
+
+# Elastic Beanstalk deployment configuration
+!.ebextensions/
+!.platform/
+
+# Saved infrastructure configuration
+!infrastructure/
+
+# Elastic Beanstalk process configuration
+!Procfile
+
+# Approved local MySQL initialization scripts
+!docker/mysql/init/*.sql
