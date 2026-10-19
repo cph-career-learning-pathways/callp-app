@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from front_end.aws_parameters import get_parameter
 
 load_dotenv()
 
@@ -24,12 +25,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ["SECRET_KEY"]
+SECRET_KEY = get_parameter("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ["DEBUG"]
+DEBUG = get_parameter("DEBUG").lower() == "true"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    ".elasticbeanstalk.com",
+    "callp.dev",
+]
 
 
 # Application definition
@@ -81,11 +85,12 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.environ["RDS_DB_NAME"],
-        "USER": os.environ["RDS_DB_USER"],
-        "PASSWORD": os.environ["RDS_DB_PASSWORD"],
-        "HOST": os.environ["RDS_DB_HOST"],
-        "PORT": os.environ.get("RDS_DB_PORT", "3306"),
+        "NAME": get_parameter("RDS_DB_NAME"),
+        "USER": get_parameter("RDS_USERNAME"),
+        "PASSWORD": get_parameter("RDS_PASSWORD"),
+        "HOST": get_parameter("RDS_HOSTNAME"),
+        "PORT": get_parameter("RDS_PORT"),
+        "CONN_MAX_AGE": 60,
     }
 }
 
