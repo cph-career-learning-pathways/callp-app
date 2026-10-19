@@ -1,0 +1,58 @@
+/* Top Navigation Bar */
+.topbar {
+    background-color: #172536;
+    width: 100%;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.nav {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    height: 64px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nav-brand {
+    color: #ffffff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+}
+
+.nav-link {
+    color: #cbd5e1;
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+    color: #ffffff;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .nav {
+        padding: 0 16px;
+        height: 56px;
+    }
+
+    .nav-links {
+        gap: 16px;
+    }
+
+    .nav-brand {
+        font-size: 1rem;
+    }
+}
