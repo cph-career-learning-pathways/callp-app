@@ -1,0 +1,13 @@
+{% extends "front_end/base.html" %}
+{% block title %}Resources | Django Demo{% endblock %}
+
+{% block content %}
+<section class="resources">
+  <h1 class="resources-title">Available Resources</h1>
+  {% for resource in resources %}
+  <article class="resource-card">
+    <h2 class="resource-name">{{ resource.resource_title }}</h2>
+    <p class="resource-description">{{ resource.resource_snippet }}</p></article>
+  {% empty %}<p class="resources-empty">No resources found.</p>{% endfor %}
+</section>
+{% endblock %}

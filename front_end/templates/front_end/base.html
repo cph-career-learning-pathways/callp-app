@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>{% block title %}Django AWS Demo{% endblock %}</title></head>
+<body class="app">
+  {% include "front_end/topbar.html" %}
+  <main class="main-content">
+    {% block content %}
+    {% endblock %}
+  </main>
+  <footer class="footer">Powered by Django on AWS</footer>
+</body>
+</html>
