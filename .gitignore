@@ -1,21 +1,7 @@
+
 # =============================================================================
 # CaLLP - Career and Lifelong Learning Pathway .gitignore
 # =============================================================================
-
-
-# =============================================================================
-# TRACK (NOT IGNORED)
-# =============================================================================
-
-!.env.example
-
-!config/
-!config/**
-
-!.platform/
-!.platform/**
-
-!Procfile
 
 
 # =============================================================================
@@ -158,6 +144,13 @@ temp/
 
 .elasticbeanstalk/
 
+# Raw AWS configuration exports
+callp-current-config-*.json
+callp-recovery-template-*.json
+callp-dev-environment-candidate.json
+callp-dev-app-options.json
+callp-dev-ssm-baseline_v*.json
+
 
 # -----------------------------------------------------------------------------
 # Database exports / dumps
@@ -191,3 +184,27 @@ temp/
 *.crt
 *.cer
 *.csr
+
+
+# =============================================================================
+# TRACK (NOT IGNORED)
+# =============================================================================
+
+# Shared environment variable template
+!.env.example
+
+# Django configuration
+!config/
+
+# Elastic Beanstalk deployment configuration
+!.ebextensions/
+!.platform/
+
+# Saved infrastructure configuration
+!infrastructure/
+
+# Elastic Beanstalk process configuration
+!Procfile
+
+# Approved local MySQL initialization scripts
+!docker/mysql/init/*.sql
