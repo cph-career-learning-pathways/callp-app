@@ -1,0 +1,202 @@
+
+<header class="topbar">
+  <div class="topbar-brand">
+    <a href="/" class="site-title">
+      Career & Lifelong Learning Pathway
+    </a>
+  </div>
+
+  <form
+    id="serach-form"
+    class="search-form"
+    method="GET">
+    <label for="search" class="sr-only">
+      Search
+    </label>
+
+    <div class="search-input-wrap">
+      <span class="search-icon" aria-hidden="true">
+        &#128269;
+      </span>
+
+      <input
+        type="search"
+        id="search"
+        name="search"
+        class="search-input"
+        placeholder="{% if search_mode == 'web' %}Search web for resources...{% else %}Search available collections...{% endif %}"
+        value="{{ search_query }}" />
+      
+      <input
+        type="hidden"
+        id="search-mode"
+        name="search-mode"
+        value="{{ search_mode }}" />
+
+      <div class="search-mode-selector" data-search-mode-selector>
+        <button
+          class="search-mode-button"
+          type="button"
+          aria-expanded="false"
+          aria-haspopup="menu"
+          data-search-mode-button>
+
+          <span data-search-mode-label>
+            {% if search_mode == "web" %}Web{% else %}Collections{% endif %}
+          </span>
+          <span class="search-mode-chevron" aria-hidden="true">&#9662;</span>
+        </button>
+
+        <div
+          class="search-mode-menu"
+          role="menu"
+          data-search-mode-menu
+          hidden>
+        
+          <button
+            class="search-mode-option"
+            type="button"
+            role="menuitem"
+            data-search-mode-option="collections">
+            Collections
+          </button>
+          <button
+            class="search-mode-option"
+            type="button"
+            role="menuitem"
+            data-search-mode-option="web">
+            Web
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="category-filter-row" aria-label="Resource category filters">
+      <div class="category-dropdown" data-category-dropdown>
+        <button
+          class="category-filter-button{% if selected_skills %} has-selection{% endif %}"
+          type="button"
+          aria-expanded="false"
+          data-dropdown-button>
+
+          Skills
+          <span
+            class="category-filter-count"
+            data-selection-count
+            {% if not selected_skills %}hidden{% endif %}
+          >{{ selected_skills|length }}</span>
+          <span class="category-filter-chevron" aria-hidden="true">&#9662;</span>
+        </button>
+
+        <div class="category-filter-menu" data-dropdown-menu hidden>
+          <div class="category-filter-menu-title">Skills</div>
+
+          {% for category in skill_options %}
+            <label class="category-filter-option">
+              <input
+                type="checkbox"
+                name="skill"
+                value="{{ category.category_name }}"
+                {% if category.category_name in selected skills %}checked{% endif %} />
+              <span>{{ category.category_name }}</span>
+            </label>
+          {% empty %}
+            <p class="category-filter-empty">No skills available.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="category-dropdown" data-category-dropdown>
+        <button
+          class="category-filter-button{% if selected_degree_programs %} has selection{% endif %}"
+          type="button"
+          aria-expanded="false"
+          data-dropdown-button>
+
+          Degree Program
+          <span
+            class="category-filter-count"
+            data-selection-count
+            {% if not selected_degree_programs %}hidden{% endif %}
+          >{{ selected_degree_programs|length }}</span>
+          <span class="category-filter-chevron" aria-hidden="true">&#9662;</span>
+        </button>
+
+        <div class="category-filter-menu" data-dropdown-menu hidden>
+          <div class="category-filter-menu-title">Degree Program</div>
+
+          {% for category in degree_program_options %}
+            <label class="category-filter-option">
+              <input
+                type="checkbox"
+                name="degree_program"
+                value="{{ category.category_name }}"
+                {% if category.category_name in selected_degree_programs %}checked{% endif %}>
+              <span>{{ category.category_name }}</span>
+            </label>
+          {% empty %}
+            <p class="category-filter-empty">No degree programs available.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="category-dropdown" data-category-dropdown>
+        <button
+          class="category-filter-button{% if selected_career_fields %} has-selection{% endif %}"
+          type="button"
+          aria-expanded="false"
+          data-dropdown-button>
+
+          Career Field
+          <span
+            class="category-filter-count"
+            data-selection-count
+            {% if not selected_career_fields %}hidden{% endif %}
+          >{{ selected_career_fields|length }}</span>
+          
+          <span class="category-filter-chevron" aria-hidden="true">&#9662;</span>
+        </button>
+
+        <div class="category-filter-menu" data-dropdown-menu hidden>
+          <div class="category-filter-menu-title">Career Field</div>
+
+          {% for category in career_field_options %}
+            <label class="category-filter-option">
+              <input
+                type="checkbox"
+                name="career_field"
+                value="{{ category.category_name }}"
+                {% if category.category_name in selected_career_fields %}checked{% endif %}>
+                  <span>{{ category.category_name }}</span>
+            </label>
+          {% empty %}
+            <p class="category-filter-empty">No career fields available.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <button class="category-filter-apply" type="submit">
+        Apply
+      </button>
+
+      {% if swap_target %}
+        <button
+          class="search-swap-button"
+          type="submit"
+          name="swap_to"
+          value="{{ swap_target }}"
+          formnovalidate>
+
+          <span aria-hidden="true">&#8644;</span>
+          {{ swap_label }}
+        </button>
+      {% endif %}
+    </div>
+  </form>
+
+  <button class="account-button" type="button">
+    <span class="account-icon">&#9817;</span>
+    Account
+  </button>
+
+</header>

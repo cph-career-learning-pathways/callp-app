@@ -9,12 +9,20 @@
         href="{% static 'css/global.css' %}" >
 </head>
 
-<body class="app">
-  {% include "front_end/topbar.html" %}
-  <main class="main-content">
-    {% block content %}
-    {% endblock %}
-  </main>
+<body>
+
+  {% include "front_end/partials/topbar.html" %}
+  
+  <div class="page-layout">
+  
+    <main class="main-content">
+      {% block content %}
+      {% endblock %}
+    </main>
+  
+  </div>
+
   <footer class="footer">Powered by Django on AWS</footer>
+
 </body>
 </html>

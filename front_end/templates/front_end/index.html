@@ -1,10 +1,122 @@
 {% extends "front_end/base.html" %}
-{% block title %}Home | Django Demo{% endblock %}
+{% block title %}Home{% endblock %}
 
 {% block content %}
-<section class="hero">
-  <h1 class="hero-title">Welcome, {{ username|default:"Guest" }}!</h1>
-  <p class="hero-description">Django dynamically rendered this page on AWS.</p>
-  <a class="hero-link" href="{% url 'resource_query' %}">Explore Resources</a>
-</section>
+
+<div class="catalog-header">
+
+    <div class="catalog-heading">
+
+        <span class="catalog-label">
+            {% if search_mode == "web" %}
+                (A) DISCOVERY
+            {% else %}
+                (A) COLLECTIONS
+            {% endif %}
+        </span>
+
+        <h1 class="catalog-title">
+            {% if search_mode == "web" %}
+                Web resource discovery
+            {% else %}
+                Curated learning collections
+            {% endif %}
+        </h1>
+
+    </div>
+
+    <div class="catalog-stats">
+        {% if search_mode == "web" %}
+            <span>{{ discovery_count }} discovered resources</span>
+        {% else %}
+            <span>{{ collection_count }} collections</span>
+        {% endif %}
+    </div>
+
+</div>
+
+
+{% if search_mode == "web" %}
+
+    <!--
+        Web Resource Discovery continues to render individual resources.
+        CSS gives these cards a flashcard-like landscape ratio, but they are
+        intentionally NOT stacked because each result represents one resource.
+    -->
+    {% if discovery_error %}
+        <p>{{ discovery_error }}</p>
+
+    {% elif discovery_results %}
+        <section class="resource-grid">
+            {% for resource in discovery_results %}
+                {% include "landing/partials/discovery_card.html" with resource=resource %}
+            {% endfor %}
+        </section>
+
+    {% elif discovery_attempted %}
+        <p>No usable web resources were returned.</p>
+
+    {% else %}
+        <p>
+            Enter a search term or select at least one Skill, Degree Program,
+            or Career Field to discover web resources.
+        </p>
+    {% endif %}
+
+{% else %}
+
+    <!--
+        ADDED: Collections mode renders one real card per CuratedCollection.
+        Two CSS-generated layers behind each card create the stacked effect and
+        communicate that each collection contains multiple resources.
+    -->
+    <section class="collection-grid">
+
+        {% for collection in collections %}
+            <div class="collection-card-shell">
+                <article
+                    class="collection-card"
+                    data-collection-id="{{ collection.collection_id }}"
+                >
+                    <div class="collection-card-topline">
+                        <span class="collection-card-label">Collection</span>
+                        <span class="collection-resource-count">
+                            {{ collection.resource_count }} resource{{ collection.resource_count|pluralize }}
+                        </span>
+                    </div>
+
+                    <h2 class="collection-title">
+                        {{ collection.collection_name }}
+                    </h2>
+
+                    {% if collection.collection_description %}
+                        <p class="collection-description">
+                            {{ collection.collection_description }}
+                        </p>
+                    {% endif %}
+
+                    {% if collection.display_categories %}
+                        <div class="collection-category-preview">
+                            {% for category_name in collection.display_categories %}
+                                <span class="collection-category-pill">
+                                    {{ category_name }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </article>
+            </div>
+
+        {% empty %}
+            {% if search_query %}
+                <p>No collections matched this search.</p>
+            {% else %}
+                <p>No curated collections have been added yet.</p>
+            {% endif %}
+        {% endfor %}
+
+    </section>
+
+{% endif %}
+
 {% endblock %}
