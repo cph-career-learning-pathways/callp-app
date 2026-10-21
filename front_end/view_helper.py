@@ -1,286 +1,145 @@
+"""Query helpers for the unmanaged career-resource schema in models.py."""
+from django.db.models import Count, Q, Prefetch
+
 from .models import (
-    Category,
-    CuratedCollection,
-    Filter,
-    PriceModel,
-    CareerResource,
-    Source,
+    Category, CuratedCollection, Filter, PriceModel, CareerResource,
+    Source, CollectionResources, ResourceCategory,
 )
 
+LAST_COLLECTION_SEARCH = "last_collection_search"
+LAST_WEB_SEARCH = "last_web_search"
+
+
 def format_duration(seconds):
-    """Convert a duration in seconds into a compact display string."""
     if seconds is None:
         return None
     if seconds < 60:
         return "Less than a minute"
-
     minutes = round(seconds / 60)
     if minutes < 60:
         return f"{minutes} min"
-
     hours = seconds / 3600
-    if hours.is_integer():
-        return f"{int(hours)} hr"
-
-    return f"{hours:.1f} hr"
+    return f"{int(hours)} hr" if hours.is_integer() else f"{hours:.1f} hr"
 
 
 def get_filter_options():
-    """Load all filter options used by the topbar and left sidebar."""
-
+    active_categories = Category.objects.filter(is_active="Y")
     return {
-        # Category taxonomy
-        "skill_options": Category.objects.filter(
-            category_type="Skill",
-            is_active=True,
-        ).order_by("category_name"),
-
-        "degree_program_options": Category.objects.filter(
-            category_type="Degree Program",
-            is_active=True,
-        ).order_by("category_name"),
-
-        "career_field_options": Category.objects.filter(
-            category_type="Career Field",
-            is_active=True,
-        ).order_by("category_name"),
-
-        # Price
-        "price_options": PriceModel.objects.filter(
-            is_active=True,
-        ).order_by("price_model_name"),
-
-        # Sources
-        "source_options": Source.objects.filter(
-            is_active=True,
-        ).order_by("source_name"),
-
-        # Resource fields
-        "resource_type_options": (
-            Resource.objects
-            .exclude(resource_type__isnull=True)
-            .exclude(resource_type="")
-            .values_list("resource_type", flat=True)
-            .distinct()
-            .order_by("resource_type")
-        ),
-
-        "resource_format_options": (
-            Resource.objects
-            .exclude(resource_format__isnull=True)
-            .exclude(resource_format="")
-            .values_list("resource_format", flat=True)
-            .distinct()
-            .order_by("resource_format")
-        ),
-
-        # ResourceFilter / Filter model
-        "difficulty_options": Filter.objects.filter(
-            is_active=True,
-        ).order_by("filter_name"),
+        "skill_options": active_categories.filter(category_type="skill").order_by("category_name"),
+        "degree_program_options": active_categories.filter(category_type="degree program").order_by("category_name"),
+        "career_field_options": active_categories.filter(category_type="career field").order_by("category_name"),
+        "price_options": PriceModel.objects.filter(is_active="Y").order_by("price_model_name"),
+        "source_options": Source.objects.filter(is_active="Y").order_by("source_name"),
+        "resource_type_options": CareerResource.objects.filter(is_active="Y").exclude(resource_type="").values_list("resource_type", flat=True).distinct().order_by("resource_type"),
+        "resource_format_options": CareerResource.objects.filter(is_active="Y").exclude(resource_format="").values_list("resource_format", flat=True).distinct().order_by("resource_format"),
+        "difficulty_options": Filter.objects.filter(is_active="Y", filter_type__iexact="difficulty").order_by("filter_name"),
     }
 
 
-def apply_collection_filters(
-    collections,
-    selected_skills,
-    selected_degree_programs,
-    selected_career_fields,
-    selected_prices,
-    selected_sources,
-    selected_resource_types,
-    selected_formats,
-    selected_difficulties,
-):
-    """
-    Apply all sidebar filters to collections.
+def apply_collection_filters(collections, selected_skills, selected_degree_programs,
+                             selected_career_fields, selected_prices, selected_sources,
+                             selected_resource_types, selected_formats, selected_difficulties):
+    """OR within a filter group; AND between groups, via explicit join models."""
+    category_path = "collection_resources__resource__resource_categories__category"
+    for values, category_type in (
+        (selected_skills, "skill"),
+        (selected_degree_programs, "degree program"),
+        (selected_career_fields, "career field"),
+    ):
+        if values:
+            collections = collections.filter(**{
+                f"{category_path}__category_type": category_type,
+                f"{category_path}__category_name__in": values,
+                f"{category_path}__is_active": "Y",
+                "collection_resources__resource__is_active": "Y",
+            })
 
-    Multiple values within one filter group use OR behavior.
-    Different filter groups use AND behavior.
-    """
-
-    if selected_skills:
-        collections = collections.filter(
-            resources__categories__category_type="Skill",
-            resources__categories__category_name__in=selected_skills,
-        )
-
-    if selected_degree_programs:
-        collections = collections.filter(
-            resources__categories__category_type="Degree Program",
-            resources__categories__category_name__in=selected_degree_programs,
-        )
-
-    if selected_career_fields:
-        collections = collections.filter(
-            resources__categories__category_type="Career Field",
-            resources__categories__category_name__in=selected_career_fields,
-        )
-
-    if selected_prices:
-        collections = collections.filter(
-            resources__price_model__price_model_name__in=selected_prices,
-        )
-
-    if selected_sources:
-        collections = collections.filter(
-            resources__source__source_name__in=selected_sources,
-        )
-
-    if selected_resource_types:
-        collections = collections.filter(
-            resources__resource_type__in=selected_resource_types,
-        )
-
-    if selected_formats:
-        collections = collections.filter(
-            resources__resource_format__in=selected_formats,
-        )
-
+    resource_path = "collection_resources__resource"
+    for values, lookup in (
+        (selected_prices, "price_model__price_model_name__in"),
+        (selected_sources, "source__source_name__in"),
+        (selected_resource_types, "resource_type__in"),
+        (selected_formats, "resource_format__in"),
+    ):
+        if values:
+            collections = collections.filter(**{
+                f"{resource_path}__{lookup}": values,
+                f"{resource_path}__is_active": "Y",
+            })
     if selected_difficulties:
-        collections = collections.filter(
-            resources__resourcefilter__filter__filter_name__in=selected_difficulties,
-        )
-
+        collections = collections.filter(**{
+            f"{resource_path}__resource_filters__filter__filter_name__in": selected_difficulties,
+            f"{resource_path}__resource_filters__filter__filter_type__iexact": "difficulty",
+            f"{resource_path}__resource_filters__filter__is_active": "Y",
+            f"{resource_path}__is_active": "Y",
+        })
     return collections.distinct()
 
 
+def _collection_queryset():
+    active_categories = ResourceCategory.objects.select_related("category").filter(category__is_active="Y")
+    resources = CareerResource.objects.filter(is_active="Y").prefetch_related(
+        Prefetch("resource_categories", queryset=active_categories)
+    )
+    links = CollectionResources.objects.select_related("resource").filter(
+        resource__is_active="Y"
+    ).order_by("sort_order").prefetch_related(
+        Prefetch("resource__resource_categories", queryset=active_categories)
+    )
+    return CuratedCollection.objects.filter(is_active="Y").prefetch_related(
+        Prefetch("collection_resources", queryset=links)
+    ).annotate(resource_count=Count(
+        "collection_resources__resource", filter=Q(collection_resources__resource__is_active="Y"), distinct=True
+    ))
+
+
 def prepare_collection_cards(collections):
-    """Add compact preview data used by the stacked collection cards."""
     collections = list(collections)
-
     for collection in collections:
-        # ADDED: Show a small taxonomy preview without duplicating every category
-        # present in the collection. The full collection detail view can expose
-        # more later when that route is implemented.
-        category_names = []
-        seen_names = set()
-
-        for resource in collection.resources.all():
-            for category in resource.categories.all():
-                if category.category_name not in seen_names:
-                    seen_names.add(category.category_name)
-                    category_names.append(category.category_name)
-
-        collection.display_categories = category_names[:4]
-
+        names, seen = [], set()
+        for link in collection.collection_resources.all():
+            for category_link in link.resource.resource_categories.all():
+                name = category_link.category.category_name
+                if name not in seen:
+                    seen.add(name)
+                    names.append(name)
+        collection.display_categories = names[:4]
     return collections
 
 
-def search_local_collections(
-    search_query,
-    selected_skills,
-    selected_degree_programs,
-    selected_career_fields,
-    selected_prices,
-    selected_sources,
-    selected_resource_types,
-    selected_formats,
-    selected_difficulties,
-):
-    """Return active CuratedCollection objects for Collections mode.
-
-    ADDED: Collections mode now renders one card per collection rather than
-    flattening matching collections into individual Resource cards. This makes
-    the stacked-card presentation semantically represent a group of resources.
-    """
-    collections = (
-        CuratedCollection.objects
-        .filter(is_active=True)
-        .prefetch_related("resources__categories")
-    )
-
+def search_local_collections(search_query, selected_skills, selected_degree_programs,
+                             selected_career_fields, selected_prices, selected_sources,
+                             selected_resource_types, selected_formats, selected_difficulties):
+    collections = _collection_queryset()
     if search_query:
         collections = collections.filter(
-            Q(collection_name__icontains=search_query)
-            | Q(collection_description__icontains=search_query)
+            Q(collection_name__icontains=search_query) |
+            Q(collection_description__icontains=search_query)
         )
-
     collections = apply_collection_filters(
-        collections,
-        selected_skills,
-        selected_degree_programs,
-        selected_career_fields,
-        selected_prices,
-        selected_sources,
-        selected_resource_types,
-        selected_formats,
+        collections, selected_skills, selected_degree_programs, selected_career_fields,
+        selected_prices, selected_sources, selected_resource_types, selected_formats,
         selected_difficulties,
     )
+    return prepare_collection_cards(collections.order_by("collection_name"))
 
-    collections = (
-        collections
-        .annotate(resource_count=Count("resources", distinct=True))
-        .distinct()
-        .order_by("collection_name")
-    )
-
-    return prepare_collection_cards(collections)
 
 def restore_local_collections(collection_ids):
-    """Restore cached Collections results using inexpensive local IDs."""
     if not collection_ids:
         return []
-
-    collections = (
-        CuratedCollection.objects
-        .filter(collection_id__in=collection_ids, is_active=True)
-        .prefetch_related("resources__categories")
-        .annotate(resource_count=Count("resources", distinct=True))
-    )
-
-    collections_by_id = {
-        collection.collection_id: collection
-        for collection in collections
-    }
-
-    ordered_collections = [
-        collections_by_id[collection_id]
-        for collection_id in collection_ids
-        if collection_id in collections_by_id
-    ]
-
-    return prepare_collection_cards(ordered_collections)
+    collections = _collection_queryset().filter(collection_id__in=collection_ids)
+    by_id = {item.collection_id: item for item in collections}
+    return prepare_collection_cards([by_id[item_id] for item_id in collection_ids if item_id in by_id])
 
 
-def search_web_resources(
-    search_query,
-    selected_skills,
-    selected_degree_programs,
-    selected_career_fields,
-):
-    """Call Resource Discovery and return transient normalized dictionaries."""
-    discovery_filters = {
-        "skills": selected_skills,
-        "degree_programs": selected_degree_programs,
-        "career_fields": selected_career_fields,
-    }
-
-    results = search_resources(
-        search_query,
-        filters=discovery_filters,
-    )
-
-    for result in results:
-        result["display_duration"] = format_duration(
-            result.get("duration_seconds")
-        )
-
-    return results
+def search_web_resources(search_query, selected_skills, selected_degree_programs, selected_career_fields):
+    """Web discovery integration was not present in the supplied archive."""
+    raise RuntimeError("Web resource discovery is not configured in this deployment")
 
 
-def build_search_state(
-    search_query,
-    selected_skills,
-    selected_degree_programs,
-    selected_career_fields,
-    selected_prices,
-    selected_sources,
-    selected_resource_types,
-    selected_formats,
-    selected_difficulties,
-):
-    """Return the serializable form state shared by both cached search modes."""
+def build_search_state(search_query, selected_skills, selected_degree_programs,
+                       selected_career_fields, selected_prices, selected_sources,
+                       selected_resource_types, selected_formats, selected_difficulties):
     return {
         "query": search_query,
         "skills": list(selected_skills),
@@ -292,4 +151,3 @@ def build_search_state(
         "formats": list(selected_formats),
         "difficulties": list(selected_difficulties),
     }
-

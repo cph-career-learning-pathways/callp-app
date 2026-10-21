@@ -97,7 +97,7 @@
                 type="checkbox"
                 name="skill"
                 value="{{ category.category_name }}"
-                {% if category.category_name in selected skills %}checked{% endif %} />
+                {% if category.category_name in selected_skills %}checked{% endif %} />
               <span>{{ category.category_name }}</span>
             </label>
           {% empty %}

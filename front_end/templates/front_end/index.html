@@ -8,68 +8,22 @@
     <div class="catalog-heading">
 
         <span class="catalog-label">
-            {% if search_mode == "web" %}
-                (A) DISCOVERY
-            {% else %}
-                (A) COLLECTIONS
-            {% endif %}
+            COLLECTIONS
         </span>
 
         <h1 class="catalog-title">
-            {% if search_mode == "web" %}
-                Web resource discovery
-            {% else %}
                 Curated learning collections
-            {% endif %}
         </h1>
 
     </div>
 
     <div class="catalog-stats">
-        {% if search_mode == "web" %}
-            <span>{{ discovery_count }} discovered resources</span>
-        {% else %}
             <span>{{ collection_count }} collections</span>
-        {% endif %}
     </div>
 
 </div>
 
 
-{% if search_mode == "web" %}
-
-    <!--
-        Web Resource Discovery continues to render individual resources.
-        CSS gives these cards a flashcard-like landscape ratio, but they are
-        intentionally NOT stacked because each result represents one resource.
-    -->
-    {% if discovery_error %}
-        <p>{{ discovery_error }}</p>
-
-    {% elif discovery_results %}
-        <section class="resource-grid">
-            {% for resource in discovery_results %}
-                {% include "landing/partials/discovery_card.html" with resource=resource %}
-            {% endfor %}
-        </section>
-
-    {% elif discovery_attempted %}
-        <p>No usable web resources were returned.</p>
-
-    {% else %}
-        <p>
-            Enter a search term or select at least one Skill, Degree Program,
-            or Career Field to discover web resources.
-        </p>
-    {% endif %}
-
-{% else %}
-
-    <!--
-        ADDED: Collections mode renders one real card per CuratedCollection.
-        Two CSS-generated layers behind each card create the stacked effect and
-        communicate that each collection contains multiple resources.
-    -->
     <section class="collection-grid">
 
         {% for collection in collections %}
@@ -116,7 +70,5 @@
         {% endfor %}
 
     </section>
-
-{% endif %}
 
 {% endblock %}

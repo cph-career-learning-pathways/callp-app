@@ -1,20 +1,14 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse
-from django.db.models import Count, Q
-
-from .models import (
-    Category,
-    CuratedCollection,
-    Filter,
-    PriceModel,
-    CareerResource,
-    Source,
+from .models import CareerResource
+from .view_helper import (
+    LAST_COLLECTION_SEARCH, LAST_WEB_SEARCH, get_filter_options,
+    restore_local_collections, search_local_collections, search_web_resources,
+    build_search_state,
 )
-from .view_helper import *
 
 # Create your views here.
 def index(request):
-    """Coordinate new searches and instant swaps to cached previous results."""
     # Existing behavior: swap_to restores the previous result set instead of
     # executing either search backend again.
     swap_to = request.GET.get("swap_to")
@@ -201,7 +195,8 @@ def index(request):
     **filter_options,
 }
 
-    return render(request, "landing/index.html", context)
+    return render(request, "front_end/index.html", context)
+
 
 def resource_query(request):
     resources = CareerResource.objects.all()[:50]
