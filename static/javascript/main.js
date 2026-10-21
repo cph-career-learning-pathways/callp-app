@@ -460,3 +460,38 @@ document.addEventListener("keydown", (event) => {
         closeSearchModeDropdown();
     }
 });
+
+
+const searchForm = document.getElementById("search-form");
+const sidebarElement = document.getElementById("sidebar");
+
+if (searchForm && sidebarElement) {
+    searchForm.addEventListener("formdata", (event) => {
+        const formData = event.formData;
+
+        // Sidebar-only filters are not otherwise part of the form.
+        const sidebarOnlyFilters = [
+            "price",
+            "source",
+            "resource_type",
+            "format",
+            "difficulty"
+        ];
+
+        sidebarOnlyFilters.forEach((name) => {
+            formData.delete(name);
+
+            sidebarElement
+                .querySelectorAll(
+                    `input[type="checkbox"][name="${name}"]:checked`
+                )
+                .forEach((input) => {
+                    formData.append(name, input.value);
+                });
+        });
+
+        // The topbar owns the three shared category filters.
+        // Their values are already synchronized by main.js,
+        // so sidebar copies must not be submitted again.
+    });
+}
