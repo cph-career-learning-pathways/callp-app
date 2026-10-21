@@ -1,10 +1,74 @@
 {% extends "front_end/base.html" %}
-{% block title %}Home | Django Demo{% endblock %}
+{% block title %}Home{% endblock %}
 
 {% block content %}
-<section class="hero">
-  <h1 class="hero-title">Welcome, {{ username|default:"Guest" }}!</h1>
-  <p class="hero-description">Django dynamically rendered this page on AWS.</p>
-  <a class="hero-link" href="{% url 'resource_query' %}">Explore Resources</a>
-</section>
+
+<div class="catalog-header">
+
+    <div class="catalog-heading">
+
+        <span class="catalog-label">
+            COLLECTIONS
+        </span>
+
+        <h1 class="catalog-title">
+                Curated learning collections
+        </h1>
+
+    </div>
+
+    <div class="catalog-stats">
+            <span>{{ collection_count }} collections</span>
+    </div>
+
+</div>
+
+
+    <section class="collection-grid">
+
+        {% for collection in collections %}
+            <div class="collection-card-shell">
+                <article
+                    class="collection-card"
+                    data-collection-id="{{ collection.collection_id }}"
+                >
+                    <div class="collection-card-topline">
+                        <span class="collection-card-label">Collection</span>
+                        <span class="collection-resource-count">
+                            {{ collection.resource_count }} resource{{ collection.resource_count|pluralize }}
+                        </span>
+                    </div>
+
+                    <h2 class="collection-title">
+                        {{ collection.collection_name }}
+                    </h2>
+
+                    {% if collection.collection_description %}
+                        <p class="collection-description">
+                            {{ collection.collection_description }}
+                        </p>
+                    {% endif %}
+
+                    {% if collection.display_categories %}
+                        <div class="collection-category-preview">
+                            {% for category_name in collection.display_categories %}
+                                <span class="collection-category-pill">
+                                    {{ category_name }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </article>
+            </div>
+
+        {% empty %}
+            {% if search_query %}
+                <p>No collections matched this search.</p>
+            {% else %}
+                <p>No curated collections have been added yet.</p>
+            {% endif %}
+        {% endfor %}
+
+    </section>
+
 {% endblock %}

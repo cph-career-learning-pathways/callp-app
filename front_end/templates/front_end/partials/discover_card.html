@@ -1,0 +1,84 @@
+<!--
+    ADDED: Resource Discovery result card.
+
+    Web results are normalized dictionaries, not saved Django Resource model
+    instances. This partial keeps that distinction explicit while reusing the
+    landing page's existing resource-card visual structure.
+-->
+<article class="resource-card discovery-resource-card">
+
+    <div class="resource-meta">
+        <span>
+            {% if resource.source %}
+                {{ resource.source }}
+            {% else %}
+                Unknown source
+            {% endif %}
+
+            {% if resource.creator %}
+                · {{ resource.creator }}
+            {% endif %}
+        </span>
+
+        <span>
+            {% if resource.resource_type %}
+                {{ resource.resource_type }}
+            {% endif %}
+
+            {% if resource.resource_type and resource.pricing_model %}
+                ·
+            {% endif %}
+
+            {% if resource.pricing_model %}
+                {{ resource.pricing_model }}
+            {% endif %}
+        </span>
+    </div>
+
+    <h2 class="resource-title">
+        <a
+            href="{{ resource.url }}"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            {{ resource.title|default:resource.url }}
+        </a>
+    </h2>
+
+    {% if resource.description %}
+        <p class="resource-description">
+            {{ resource.description }}
+        </p>
+    {% endif %}
+
+    <div class="resource-footer">
+        <span>
+            {% if resource.resource_format %}
+                {{ resource.resource_format }}
+            {% endif %}
+
+            {% if resource.resource_format and resource.display_duration %}
+                ·
+            {% endif %}
+
+            {% if resource.display_duration %}
+                {{ resource.display_duration }}
+            {% endif %}
+        </span>
+
+        <span>
+            {% if resource.views != None %}
+                {{ resource.views }} views
+            {% endif %}
+
+            {% if resource.views != None and resource.likes != None %}
+                ·
+            {% endif %}
+
+            {% if resource.likes != None %}
+                {{ resource.likes }} likes
+            {% endif %}
+        </span>
+    </div>
+
+</article>
