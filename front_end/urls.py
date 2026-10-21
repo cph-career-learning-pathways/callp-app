@@ -7,7 +7,7 @@ urlpatterns = [
 
     # Issue 35 : lazy loading collection details
     path(
-        "collections/<str:collection_id>/details", 
+        "collections/<str:collection_id>/details/", 
         views.collection_details, 
         name="collection_details"
     ),

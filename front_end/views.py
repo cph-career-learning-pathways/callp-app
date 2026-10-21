@@ -218,7 +218,7 @@ def collection_details(request, collection_id):
         CollectionResources.objects
         .filter(
             collection=collection,
-            resource_is_active="Y",
+            resource__is_active="Y",
         )
         .select_related(
             "resource",
@@ -241,7 +241,7 @@ def collection_details(request, collection_id):
             {
                 "id": link.category.category_id,
                 "name": link.category.category_name,
-                "type": link.categgory.category_type,
+                "type": link.category.category_type,
             }
             for link in resource.resource_categories.all()
             if link.category.is_active == "Y"
