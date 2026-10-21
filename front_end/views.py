@@ -1,6 +1,13 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
 from django.urls import reverse
-from .models import CareerResource
+
+from .models import (
+    CareerResource,
+    CuratedCollection,
+    CollectionResources,
+)
+
 from .view_helper import (
     LAST_COLLECTION_SEARCH, LAST_WEB_SEARCH, get_filter_options,
     restore_local_collections, search_local_collections, search_web_resources,
@@ -8,6 +15,7 @@ from .view_helper import (
 )
 
 # Create your views here.
+
 def index(request):
     # Existing behavior: swap_to restores the previous result set instead of
     # executing either search backend again.
@@ -197,6 +205,91 @@ def index(request):
 
     return render(request, "front_end/index.html", context)
 
+def collection_details(request, collection_id):
+    # return curated collection and its details
+    # used by rightbar for lazy loading
+    collection = get_object_or_404(
+        CuratedCollection,
+        collection_id=collection_id,
+        is_active="Y",
+    )
+
+    collection_resources = (
+        CollectionResources.objects
+        .filter(
+            collection=collection,
+            resource_is_active="Y",
+        )
+        .select_related(
+            "resource",
+            "resource__source",
+            "resource__price_model",
+        )
+        .prefetch_related(
+            "resource__resource_categories__category",
+            "resource__resource_filters__filter",
+        )
+        .order_by("sort_order", "resource_id")
+    )
+
+    resources = []
+
+    for association in collection_resources:
+        resource = association.resource
+
+        categories = [
+            {
+                "id": link.category.category_id,
+                "name": link.category.category_name,
+                "type": link.categgory.category_type,
+            }
+            for link in resource.resource_categories.all()
+            if link.category.is_active == "Y"
+        ]
+
+        filters = [
+            {
+                "name": link.filter.filter_name,
+                "type": link.filter.filter_type,
+            }
+            for link in resource.resource_filters.all()
+            if link.filter.is_active == "Y"
+        ]
+
+        resources.append({
+            "id": resource.resource_id,
+            "title": resource.resource_title,
+            "description": resource.resource_snippet or "",
+            "url": resource.resource_url,
+            "resource_type": resource.resource_type,
+            "resource_format": resource.resource_format,
+            "duration": resource.resource_duration,
+            "publication_date": (
+                resource.resource_pub_date.isoformat()
+                if resource.resource_pub_date
+                else None
+            ),
+            "source": (
+                resource.source.source_name
+                if resource.source
+                else None
+            ),
+            "price_model": (
+                resource.price_model.price_model_name
+                if resource.price_model
+                else None
+            ),
+            "categories": categories,
+            "filters": filters,
+        })
+
+    return JsonResponse({
+        "id": collection.collection_id,
+        "name": collection.collection_name,
+        "description": collection.collection_description or "",
+        "resource_count": len(resources),
+        "resources": resources,
+    })
 
 def resource_query(request):
     resources = CareerResource.objects.all()[:50]
