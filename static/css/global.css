@@ -848,3 +848,185 @@ select {
         width: min(420px, 90vw);
     }
 }
+
+/* =========================================================
+   RIGHT DETAIL SIDEBAR
+   Issue #35
+   ========================================================= */
+
+/* Background dimming overlay */
+.detail-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+
+    background: rgba(0, 30, 27, 0.35);
+
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.detail-overlay.is-visible {
+    opacity: 1;
+}
+
+.detail-overlay[hidden] {
+    display: none;
+}
+
+
+/* Right sidebar */
+.sidebar-right {
+    position: fixed;
+    top: 0;
+    right: 0;
+
+    width: 50vw;
+    height: 100dvh;
+
+    z-index: 110;
+
+    display: flex;
+    flex-direction: column;
+
+    background: var(--sidebar);
+    border-left: 1px solid var(--pacific-blue);
+
+    box-shadow: -8px 0 30px rgba(0, 76, 70, 0.15);
+
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+
+    overflow: hidden;
+}
+
+.sidebar-right.is-open {
+    transform: translateX(0);
+}
+
+.sidebar-right[hidden] {
+    display: none;
+}
+
+
+/* Header */
+.detail-sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+
+    padding: 30px 32px 20px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.detail-sidebar-label {
+    color: var(--sea-glass);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+.detail-sidebar-title {
+    margin: 10px 0 0;
+    color: var(--old-growth-green);
+    font-family: Georgia, serif;
+    font-size: clamp(24px, 3vw, 36px);
+}
+
+.detail-sidebar-close {
+    border: 0;
+    background: transparent;
+    color: var(--old-growth-green);
+
+    font-size: 30px;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+.detail-sidebar-close:hover {
+    color: var(--sea-glass);
+}
+
+
+/* Scrollable content */
+.detail-sidebar-content {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 24px 32px;
+}
+
+
+/* Selected card */
+.collection-card.is-detail-selected {
+    position: relative;
+    z-index: 100;
+
+    border-color: var(--chanterelle-gold);
+    box-shadow: 0 0 0 3px var(--chanterelle-gold);
+}
+
+
+/* Interactive collection cards */
+.collection-card[data-collection-id] {
+    cursor: pointer;
+}
+
+.collection-card[data-collection-id]:focus-visible {
+    outline: 3px solid var(--sea-glass);
+    outline-offset: 4px;
+}
+
+
+/* Mobile */
+@media (max-width: 750px) {
+    .sidebar-right {
+        width: 100vw;
+    }
+
+    .detail-sidebar-header {
+        padding: 24px 20px 18px;
+    }
+
+    .detail-sidebar-content {
+        padding: 20px;
+    }
+}
+.collection-card-shell:has(.is-detail-selected) {
+    position: relative;
+    z-index: 100;
+}
+
+
+/* =========================================================
+   SELECTED COLLECTION CARD MOVEMENT
+   ========================================================= */
+
+.collection-card-shell {
+    transition: transform 0.3s ease;
+}
+
+/*
+ * The selected shell moves as one unit, including
+ * the decorative stacked-card layers.
+ */
+.collection-card-shell.is-detail-active {
+    z-index: 100;
+    transform: translateX(
+        var(--detail-card-offset, 0px)
+    );
+}
+
+/*
+ * Keep the selected card above the dimming overlay.
+ */
+.collection-card-shell.is-detail-active .collection-card {
+    border-color: var(--chanterelle-gold);
+    box-shadow:
+        0 0 0 3px var(--chanterelle-gold),
+        0 12px 30px rgba(0, 76, 70, 0.18);
+}
+

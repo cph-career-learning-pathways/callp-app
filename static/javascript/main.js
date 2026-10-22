@@ -495,3 +495,668 @@ if (searchForm && sidebarElement) {
         // so sidebar copies must not be submitted again.
     });
 }
+
+
+/* =========================================================
+   RIGHT DETAIL SIDEBAR
+   Issue #35 - Open / Close Behavior
+   ========================================================= */
+
+const detailSidebar = document.getElementById("detail-sidebar");
+const detailOverlay = document.getElementById("detail-overlay");
+const detailCloseButton = document.getElementById("detail-sidebar-close");
+
+const collectionCards = document.querySelectorAll(
+    ".collection-card[data-collection-id]"
+);
+
+let detailSidebarOpen = false;
+let activeDetailCard = null;
+let previousDetailFocus = null;
+
+
+/**
+ * Move the selected collection card left if the
+ * right sidebar would otherwise cover it.
+ */
+function positionSelectedDetailCard(card) {
+    const shell = card.closest(".collection-card-shell");
+
+    if (!shell) {
+        return;
+    }
+
+    const drawerWidth = window.innerWidth * 0.5;
+    const drawerLeft = window.innerWidth - drawerWidth;
+
+    const cardRect = shell.getBoundingClientRect();
+
+    // Leave a small gap between the card and drawer.
+    const margin = 24;
+
+    const overlap = cardRect.right - (drawerLeft - margin);
+
+    if (overlap > 0) {
+        shell.style.setProperty(
+            "--detail-card-offset",
+            `${-overlap}px`
+        );
+    } else {
+        shell.style.setProperty(
+            "--detail-card-offset",
+            "0px"
+        );
+    }
+
+    shell.classList.add("is-detail-active");
+}
+
+
+/**
+ * Open the right sidebar.
+ */
+function openDetailSidebar(card) {
+    if (
+        !detailSidebar ||
+        !detailOverlay ||
+        detailSidebarOpen
+    ) {
+        return;
+    }
+
+    detailSidebarOpen = true;
+    activeDetailCard = card;
+    previousDetailFocus = document.activeElement;
+
+    // Make the overlay and sidebar visible.
+    detailOverlay.hidden = false;
+    detailSidebar.hidden = false;
+
+    // Apply open-state styling.
+    detailOverlay.classList.add("is-visible");
+    detailSidebar.classList.add("is-open");
+
+    // Highlight the selected collection card.
+    card.classList.add("is-detail-selected");
+    positionSelectedDetailCard(card);
+
+    // Update accessibility state.
+    detailSidebar.setAttribute("aria-hidden", "false");
+
+    // Move keyboard focus into the sidebar.
+    detailCloseButton?.focus();
+}
+
+
+/**
+ * Close the right sidebar.
+ */
+function closeDetailSidebar() {
+    if (!detailSidebar || !detailSidebarOpen) {
+        return;
+    }
+
+    detailSidebarOpen = false;
+
+    detailSidebar.classList.remove("is-open");
+    detailOverlay.classList.remove("is-visible");
+
+    detailSidebar.setAttribute("aria-hidden", "true");
+
+    // Remove card highlighting.
+    if (activeDetailCard) {
+        const shell = activeDetailCard.closest(
+            ".collection-card-shell"
+        );
+
+        activeDetailCard.classList.remove("is-detail-selected");
+
+        if (shell) {
+            shell.classList.remove("is-detail-active");
+            shell.style.removeProperty("--detail-card-offset");
+        }
+
+        activeDetailCard = null;
+    }
+
+    // Hide elements after the closing animation.
+    const closingSidebar = detailSidebar;
+
+    const finishClose = () => {
+        if (!detailSidebarOpen) {
+            closingSidebar.hidden = true;
+            detailOverlay.hidden = true;
+        }
+    };
+
+    closingSidebar.addEventListener(
+        "transitionend",
+        finishClose,
+        { once: true }
+    );
+
+    // Restore keyboard focus to the previous element.
+    if (previousDetailFocus?.isConnected) {
+        previousDetailFocus.focus();
+    }
+}
+
+
+/* ---------------------------------------------------------
+   Collection card click handlers
+   --------------------------------------------------------- */
+
+collectionCards.forEach((card) => {
+    card.addEventListener("click", () => {
+        openDetailSidebar(card);
+    });
+
+    // Support Enter and Space for keyboard users.
+    card.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openDetailSidebar(card);
+        }
+    });
+});
+
+
+/* ---------------------------------------------------------
+   Closing interactions
+   --------------------------------------------------------- */
+
+// Close button
+detailCloseButton?.addEventListener(
+    "click",
+    closeDetailSidebar
+);
+
+// Clicking the dimmed background
+detailOverlay?.addEventListener(
+    "click",
+    closeDetailSidebar
+);
+
+// Escape key
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && detailSidebarOpen) {
+        event.preventDefault();
+        closeDetailSidebar();
+    }
+});
+
+
+/* =========================================================
+   RIGHT SIDEBAR - COLLECTION AND RESOURCE DETAILS
+   ========================================================= */
+
+const detailContent = document.getElementById(
+    "detail-sidebar-content"
+);
+const detailTitle = document.getElementById(
+    "detail-sidebar-title"
+);
+const detailLabel = document.getElementById(
+    "detail-sidebar-label"
+);
+const detailLoading = document.getElementById(
+    "detail-sidebar-loading"
+);
+const detailError = document.getElementById(
+    "detail-sidebar-error"
+);
+const detailNavigation = document.getElementById(
+    "detail-sidebar-navigation"
+);
+const detailBackButton = document.getElementById(
+    "detail-sidebar-back"
+);
+
+const collectionDetailCache = new Map();
+
+let currentDetailCollection = null;
+let detailRequestController = null;
+
+
+/* ---------------------------------------------------------
+   Helpers
+   --------------------------------------------------------- */
+
+function formatDuration(seconds) {
+    if (seconds === null || seconds === undefined || seconds === "") {
+        return "Not specified";
+    }
+
+    const total = Number(seconds);
+
+    if (!Number.isSafeInteger(total) || total < 0) {
+        return "Not specified";
+    }
+
+    const hours = Math.floor(total / 3600);
+    const minutes = Math.floor((total % 3600) / 60);
+    const remaining = total % 60;
+
+    if (hours > 0) {
+        return `${hours}:${String(minutes).padStart(2, "0")}:${String(remaining).padStart(2, "0")}`;
+    }
+
+    return `${minutes}:${String(remaining).padStart(2, "0")}`;
+}
+
+
+function createDetailElement(tag, className, text) {
+    const element = document.createElement(tag);
+
+    if (className) {
+        element.className = className;
+    }
+
+    if (text !== undefined && text !== null) {
+        element.textContent = String(text);
+    }
+
+    return element;
+}
+
+
+function appendDetailField(container, label, value) {
+    if (value === null || value === undefined || value === "") {
+        return;
+    }
+
+    const row = createDetailElement("div", "detail-field");
+
+    row.appendChild(
+        createDetailElement("dt", "detail-field-label", label)
+    );
+
+    row.appendChild(
+        createDetailElement("dd", "detail-field-value", value)
+    );
+
+    container.appendChild(row);
+}
+
+
+function appendDetailTags(container, title, items) {
+    if (!Array.isArray(items) || items.length === 0) {
+        return;
+    }
+
+    const section = createDetailElement(
+        "section",
+        "detail-tag-section"
+    );
+
+    section.appendChild(
+        createDetailElement("h3", "detail-section-title", title)
+    );
+
+    const tags = createDetailElement(
+        "div",
+        "detail-tag-list"
+    );
+
+    items.forEach((item) => {
+        const tag = createDetailElement(
+            "span",
+            "detail-tag",
+            item.name
+        );
+
+        tags.appendChild(tag);
+    });
+
+    section.appendChild(tags);
+    container.appendChild(section);
+}
+
+
+/* ---------------------------------------------------------
+   Render collection details
+   --------------------------------------------------------- */
+
+function renderCollectionDetails(collection) {
+    if (!detailContent) {
+        return;
+    }
+
+    currentDetailCollection = collection;
+
+    detailContent.replaceChildren();
+
+    detailLabel.textContent = "COLLECTION";
+    detailTitle.textContent = collection.name;
+
+    detailNavigation.hidden = true;
+
+    const container = createDetailElement(
+        "div",
+        "detail-collection"
+    );
+
+    if (collection.description) {
+        container.appendChild(
+            createDetailElement(
+                "p",
+                "detail-description",
+                collection.description
+            )
+        );
+    }
+
+    const resources = collection.resources || [];
+
+    container.appendChild(
+        createDetailElement(
+            "h3",
+            "detail-section-title",
+            `Resources (${resources.length})`
+        )
+    );
+
+    if (resources.length === 0) {
+        container.appendChild(
+            createDetailElement(
+                "p",
+                "detail-empty",
+                "This collection has no available resources."
+            )
+        );
+    }
+
+    const list = createDetailElement(
+        "div",
+        "detail-resource-list"
+    );
+
+    resources.forEach((resource, index) => {
+        const button = createDetailElement(
+            "button",
+            "detail-resource-item"
+        );
+
+        button.type = "button";
+
+        button.appendChild(
+            createDetailElement(
+                "span",
+                "detail-resource-number",
+                String(index + 1)
+            )
+        );
+
+        const info = createDetailElement(
+            "div",
+            "detail-resource-info"
+        );
+
+        info.appendChild(
+            createDetailElement(
+                "span",
+                "detail-resource-name",
+                resource.title
+            )
+        );
+
+        const metadata = [
+            resource.resource_type,
+            resource.resource_format,
+            resource.source
+        ].filter(Boolean).join(" · ");
+
+        if (metadata) {
+            info.appendChild(
+                createDetailElement(
+                    "span",
+                    "detail-resource-meta",
+                    metadata
+                )
+            );
+        }
+
+        button.appendChild(info);
+
+        button.appendChild(
+            createDetailElement(
+                "span",
+                "detail-resource-arrow",
+                "→"
+            )
+        );
+
+        button.addEventListener("click", () => {
+            renderResourceDetails(resource);
+        });
+
+        list.appendChild(button);
+    });
+
+    container.appendChild(list);
+    detailContent.appendChild(container);
+    detailContent.scrollTop = 0;
+}
+
+
+/* ---------------------------------------------------------
+   Render individual resource details
+   --------------------------------------------------------- */
+
+function renderResourceDetails(resource) {
+    if (!detailContent) {
+        return;
+    }
+
+    detailContent.replaceChildren();
+
+    detailLabel.textContent = "RESOURCE";
+    detailTitle.textContent = resource.title;
+
+    detailNavigation.hidden = false;
+
+    const container = createDetailElement(
+        "div",
+        "detail-resource"
+    );
+
+    if (resource.description) {
+        container.appendChild(
+            createDetailElement(
+                "p",
+                "detail-description",
+                resource.description
+            )
+        );
+    }
+
+    const fields = createDetailElement(
+        "dl",
+        "detail-fields"
+    );
+
+    appendDetailField(
+        fields,
+        "Resource type",
+        resource.resource_type
+    );
+
+    appendDetailField(
+        fields,
+        "Format",
+        resource.resource_format
+    );
+
+    appendDetailField(
+        fields,
+        "Duration",
+        formatDuration(resource.duration)
+    );
+
+    appendDetailField(
+        fields,
+        "Source",
+        resource.source
+    );
+
+    appendDetailField(
+        fields,
+        "Price",
+        resource.price_model
+    );
+
+    if (resource.publication_date) {
+        const date = new Date(resource.publication_date);
+
+        if (!Number.isNaN(date.getTime())) {
+            appendDetailField(
+                fields,
+                "Published",
+                date.toLocaleDateString()
+            );
+        }
+    }
+
+    container.appendChild(fields);
+
+    appendDetailTags(
+        container,
+        "Categories",
+        resource.categories
+    );
+
+    appendDetailTags(
+        container,
+        "Additional information",
+        resource.filters
+    );
+
+    if (resource.url) {
+        try {
+            const url = new URL(resource.url);
+
+            if (["https:", "http:"].includes(url.protocol)) {
+                const link = createDetailElement(
+                    "a",
+                    "detail-external-link",
+                    "Open Resource ↗"
+                );
+
+                link.href = url.href;
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+
+                container.appendChild(link);
+            }
+        } catch {
+            // Do not create links for invalid URLs.
+        }
+    }
+
+    detailContent.appendChild(container);
+    detailContent.scrollTop = 0;
+
+    detailBackButton?.focus();
+}
+
+
+/* ---------------------------------------------------------
+   Fetch collection details from Django
+   --------------------------------------------------------- */
+
+async function loadCollectionDetails(card) {
+    const url = card.dataset.detailUrl;
+
+    if (!url || !detailContent) {
+        return;
+    }
+
+    // Cancel any previous request.
+    detailRequestController?.abort();
+
+    const controller = new AbortController();
+    detailRequestController = controller;
+
+    detailContent.replaceChildren();
+    detailNavigation.hidden = true;
+    detailError.hidden = true;
+
+    detailLabel.textContent = "COLLECTION";
+    detailTitle.textContent = "Collection Details";
+
+    // Use cached data if available.
+    if (collectionDetailCache.has(url)) {
+        detailLoading.hidden = true;
+
+        renderCollectionDetails(
+            collectionDetailCache.get(url)
+        );
+
+        return;
+    }
+
+    detailLoading.hidden = false;
+
+    try {
+        const response = await fetch(url, {
+            method: "GET",
+            credentials: "same-origin",
+            signal: controller.signal,
+            headers: {
+                "Accept": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(
+                `Collection request failed: ${response.status}`
+            );
+        }
+
+        const collection = await response.json();
+
+        if (controller.signal.aborted || !detailSidebarOpen) {
+            return;
+        }
+
+        collectionDetailCache.set(url, collection);
+
+        detailLoading.hidden = true;
+        renderCollectionDetails(collection);
+
+    } catch (error) {
+        if (error.name === "AbortError") {
+            return;
+        }
+
+        console.error(
+            "Unable to load collection details:",
+            error
+        );
+
+        if (!detailSidebarOpen) {
+            return;
+        }
+
+        detailLoading.hidden = true;
+        detailError.hidden = false;
+
+    } finally {
+        if (detailRequestController === controller) {
+            detailRequestController = null;
+        }
+    }
+}
+
+
+/* ---------------------------------------------------------
+   Back navigation
+   --------------------------------------------------------- */
+
+detailBackButton?.addEventListener("click", () => {
+    if (currentDetailCollection) {
+        renderCollectionDetails(currentDetailCollection);
+        detailBackButton.hidden = false;
+        detailCloseButton?.focus();
+    }
+});
