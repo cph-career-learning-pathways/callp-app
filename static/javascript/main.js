@@ -579,6 +579,7 @@ function openDetailSidebar(card) {
     // Highlight the selected collection card.
     card.classList.add("is-detail-selected");
     positionSelectedDetailCard(card);
+    loadCollectionDetails(card);
 
     // Update accessibility state.
     detailSidebar.setAttribute("aria-hidden", "false");
@@ -595,6 +596,10 @@ function closeDetailSidebar() {
     if (!detailSidebar || !detailSidebarOpen) {
         return;
     }
+
+    detailRequestController?.abort();
+    detailRequestController = null;
+    currentDetailCollection = null;
 
     detailSidebarOpen = false;
 
