@@ -1,0 +1,100 @@
+
+<!--
+    Right Detail Sidebar
+    Issue #35: Functional Resource and Collection Cards
+
+    Displays:
+    - Curated collection details
+    - Resources belonging to a collection
+    - Individual resource details
+
+    Content is populated dynamically by JavaScript.
+-->
+
+<!-- Background dimming overlay -->
+<div
+    id="detail-overlay"
+    class="detail-overlay"
+    aria-hidden="true"
+    hidden>
+</div>
+
+<!-- Right detail sidebar -->
+<aside
+    id="detail-sidebar"
+    class="sidebar-right"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="detail-sidebar-title"
+    aria-hidden="true"
+    tabindex="-1"
+    hidden>
+
+    <!-- Header -->
+    <div class="detail-sidebar-header">
+        <div class="detail-sidebar-heading">
+            <span
+                id="detail-sidebar-label"
+                class="detail-sidebar-label">
+                DETAILS
+            </span>
+            <h2
+                id="detail-sidebar-title"
+                class="detail-sidebar-title">
+                Resource Details
+            </h2>
+        </div>
+
+        <button
+            id="detail-sidebar-close"
+            class="detail-sidebar-close"
+            type="button"
+            aria-label="Close details">
+            &times;
+        </button>
+    </div>
+
+    <!-- Back navigation -->
+    <div
+        id="detail-sidebar-navigation"
+        class="detail-sidebar-navigation"
+        hidden>
+        <button
+            id="detail-sidebar-back"
+            class="detail-sidebar-back"
+            type="button">
+            <span aria-hidden="true">&#8592;</span>
+            Back to collection
+        </button>
+    </div>
+
+    <!-- Scrollable detail content -->
+    <div
+        id="detail-sidebar-content"
+        class="detail-sidebar-content"
+        aria-live="polite">
+        <!--
+            JavaScript inserts collection or resource
+            details into this container.
+        -->
+    </div>
+
+    <!-- Loading indicator -->
+    <div
+        id="detail-sidebar-loading"
+        class="detail-sidebar-loading"
+        role="status"
+        hidden>
+        <span class="detail-loading-spinner" aria-hidden="true"></span>
+        <span>Loading details...</span>
+    </div>
+
+    <!-- Error message -->
+    <div
+        id="detail-sidebar-error"
+        class="detail-sidebar-error"
+        role="alert"
+        hidden>
+        Unable to load details. Please try again.
+    </div>
+</aside>

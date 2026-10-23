@@ -31,6 +31,10 @@
                 <article
                     class="collection-card"
                     data-collection-id="{{ collection.collection_id }}"
+                    data-detail-url="{% url 'collection_details' collection.collection_id %}"
+                    role="button"
+                    tabindex="0"
+                    aria-haspopup="dialog"
                 >
                     <div class="collection-card-topline">
                         <span class="collection-card-label">Collection</span>
