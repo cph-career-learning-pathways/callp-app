@@ -307,6 +307,9 @@ const searchModeMenu =
 const searchModeInput =
     document.getElementById("search-mode");
 
+const searchForm =
+    document.getElementById("search-form");
+
 const searchModeLabel =
     document.querySelector("[data-search-mode-label]");
 
@@ -370,12 +373,17 @@ function openSearchModeDropdown() {
  * data-search-mode-option="collections" or "web".
  *
  * This function updates:
- * 1. The hidden form value.
- * 2. The visible mode label.
- * 3. The search placeholder.
+ * 1. The search form's destination URL.
+ * 2. The hidden form value.
+ * 3. The visible mode label.
+ * 4. The search placeholder.
+ *
+ * Collections searches are routed to the landing page,
+ * while web searches are routed to the Resource Discovery page.
  */
 function setSearchMode(mode) {
     if (
+        !searchForm ||
         !searchModeInput ||
         !searchModeLabel ||
         !searchInput ||
@@ -384,6 +392,20 @@ function setSearchMode(mode) {
         return;
     }
 
+    let targetUrl;
+
+    if (mode === "web") {
+        targetUrl = searchForm.dataset.discoveryUrl;
+    }
+    else {
+    targetUrl = searchForm.dataset.collectionsUrl;
+    }
+
+    if (!targetUrl){
+        return;
+    }
+
+    searchForm.action = targetUrl;
     searchModeInput.value = mode;
     searchModeLabel.textContent = searchModeLabels[mode];
     searchInput.placeholder = searchModePlaceholders[mode];
@@ -461,8 +483,6 @@ document.addEventListener("keydown", (event) => {
     }
 });
 
-
-const searchForm = document.getElementById("search-form");
 const sidebarElement = document.getElementById("sidebar");
 
 if (searchForm && sidebarElement) {

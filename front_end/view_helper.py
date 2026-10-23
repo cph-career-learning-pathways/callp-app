@@ -132,10 +132,48 @@ def restore_local_collections(collection_ids):
     return prepare_collection_cards([by_id[item_id] for item_id in collection_ids if item_id in by_id])
 
 
-def search_web_resources(search_query, selected_skills, selected_degree_programs, selected_career_fields):
-    """Web discovery integration was not present in the supplied archive."""
-    raise RuntimeError("Web resource discovery is not configured in this deployment")
+def search_web_resources(
+    search_query,
+    selected_skills,
+    selected_degree_programs,
+    selected_career_fields,
+    ):
+    """Discover external learning resources without saving them to MySQL."""
 
+    from resource_discovery.search import search_resources
+
+    filters = {
+        "skills": selected_skills,
+        "degree_programs": selected_degree_programs,
+        "career_fields": selected_career_fields,
+    }
+
+    resources = search_resources(
+        query=search_query,
+        filters=filters,
+    )
+
+    for resource in resources:
+        duration_seconds = resource.get("duration_seconds")
+
+        resource["display_duration"] = None
+
+        if duration_seconds is not None:
+            minutes = round(duration_seconds / 60)
+
+            if minutes < 60:
+                resource["display_duration"] = f"{minutes} min"
+            else:
+                hours, remaining_minutes = divmod(minutes, 60)
+
+                if remaining_minutes:
+                    resource["display_duration"] = (
+                        f"{hours} hr {remaining_minutes} min"
+                    )
+                else:
+                    resource["display_duration"] = f"{hours} hr"
+
+    return resources
 
 def build_search_state(search_query, selected_skills, selected_degree_programs,
                        selected_career_fields, selected_prices, selected_sources,

@@ -1,3 +1,6 @@
+import logging
+from requests.exceptions import HTTPError
+
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from .models import CareerResource
@@ -113,8 +116,18 @@ def index(request):
                     }
                 )
                 request.session[LAST_WEB_SEARCH] = web_cache
-            except Exception as exc:
-                discovery_error = f"Web resource search failed: {exc}"
+            except HTTPError as exc:
+                discovery_error = (
+                    f"Web resource search failed: HTTP {exc.response.status_code}"
+                    if exc.response is not None
+                    else "Web resource search failed: HTTP error."
+                )
+
+            except Exception:
+                discovery_error = (
+                    "Web resource search is temporarily unavailable. "
+                    "Please try again later."
+                )
     else:
         if cached_search:
             # UPDATED: Collections cache now stores collection IDs because the
