@@ -12,211 +12,188 @@ from .models import (
 )
 
 from .view_helper import (
-    LAST_COLLECTION_SEARCH, LAST_WEB_SEARCH, get_filter_options,
-    restore_local_collections, search_local_collections, search_web_resources,
+    LAST_COLLECTION_SEARCH,
+    LAST_WEB_SEARCH,
+    restore_local_collections,
+    search_local_collections,
+    search_web_resources,
     build_search_state,
+    get_search_state,
+    build_search_context,
 )
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 
+# UPDATED as part of issue #32 resolution:
+#   Display and search curated collections stored in the CaLLP database.
+#   Preserve collection filtering, session caching, and previous searches.
 def index(request):
-    # Existing behavior: swap_to restores the previous result set instead of
-    # executing either search backend again.
-    swap_to = request.GET.get("swap_to")
-    if swap_to in {"collections", "web"}:
-        session_key = (
-            LAST_COLLECTION_SEARCH
-            if swap_to == "collections"
-            else LAST_WEB_SEARCH
-        )
-        cached_search = request.session.get(session_key)
+    """Display and search locally stored curated collections."""
 
-        if cached_search:
-            request.session["display_cached_search"] = {
-                "mode": swap_to,
-                "cache_key": session_key,
-            }
-            return redirect(reverse("index"))
+    # Redirect to the previous Resource Discovery search when requested.
+    if request.GET.get("swap_to") == "web":
+        if LAST_WEB_SEARCH in request.session:
+            return redirect(
+                reverse("resource_discovery") + "?restore=1"
+            )
 
-    displayed_cache = request.session.pop("display_cached_search", None)
     cached_search = None
 
-    if displayed_cache and not request.GET:
-        search_mode = displayed_cache.get("mode", "collections")
-        cached_search = request.session.get(displayed_cache.get("cache_key"))
-    else:
-        search_mode = request.GET.get("search_mode", "collections")
+    if request.GET.get("restore") == "1":
+        cached_search = request.session.get(LAST_COLLECTION_SEARCH)
 
-    if search_mode not in {"collections", "web"}:
-        search_mode = "collections"
+    search_state = get_search_state(request, cached_search)
 
-    if cached_search:
-        search_query = cached_search.get("query", "")
-
-        selected_skills = cached_search.get("skills", [])
-        selected_degree_programs = cached_search.get("degree_programs", [])
-        selected_career_fields = cached_search.get("career_fields", [])
-
-        selected_prices = cached_search.get("prices", [])
-        selected_sources = cached_search.get("sources", [])
-        selected_resource_types = cached_search.get("resource_types", [])
-        selected_formats = cached_search.get("formats", [])
-        selected_difficulties = cached_search.get("difficulties", [])
+    if cached_search is not None:
+        # Restore the previous collection results without a new search
+        collections = restore_local_collections(
+            cached_search.get("collection_ids", [])
+        )
 
     else:
-        search_query = request.GET.get("search", "").strip()
+        # Preserve the existing collection search and filtering behavior
+        collections = search_local_collections(
+            search_state["query"],
+            search_state["skills"],
+            search_state["degree_programs"],
+            search_state["career_fields"],
+            search_state["prices"],
+            search_state["sources"],
+            search_state["resource_types"],
+            search_state["formats"],
+            search_state["difficulties"],
+        )
 
-        selected_skills = request.GET.getlist("skill")
-        selected_degree_programs = request.GET.getlist("degree_program")
-        selected_career_fields = request.GET.getlist("career_field")
+        collection_cache = build_search_state(
+            search_state["query"],
+            search_state["skills"],
+            search_state["degree_programs"],
+            search_state["career_fields"],
+            search_state["prices"],
+            search_state["sources"],
+            search_state["resource_types"],
+            search_state["formats"],
+            search_state["difficulties"],
+        )
 
-        selected_prices = request.GET.getlist("price")
-        selected_sources = request.GET.getlist("source")
-        selected_resource_types = request.GET.getlist("resource_type")
-        selected_formats = request.GET.getlist("format")
-        selected_difficulties = request.GET.getlist("difficulty")
+        collection_cache["collection_ids"] = [
+            collection.collection_id
+            for collection in collections
+        ]
 
-    filter_options = get_filter_options()
+        request.session[LAST_COLLECTION_SEARCH] = collection_cache
 
-    collections = []
+    context = build_search_context(request, search_state, "collections",)
+
+    context.update({
+        "collections": collections,
+        "collection_count": len(collections),
+    })
+
+    return render(request, "front_end/index.html", context)
+
+# ADDED as part of issue #32 resolution:
+#   Display external learning resources discovered through Brave Search.
+#   Restore previous results from the session without repeating API calls.
+#   Discovered resources are not saved to the CaLLP database (will be in future).
+def resource_discovery(request):
+    """Search and display external learning resources"""
+
+    # Redirect to the previous Collections search when requested.
+    if request.GET.get("swap_to") == "collections":
+        if LAST_COLLECTION_SEARCH in request.session:
+            return redirect(
+                reverse("index") + "?restore=1"
+            )
+
+    cached_search = None
+
+    if request.GET.get("restore") == "1":
+        cached_search = request.session.get(LAST_WEB_SEARCH)
+
+    search_state = get_search_state(request, cached_search)
+
     discovery_results = []
     discovery_error = None
 
-    has_discovery_intent = any(
-        (
-            selected_skills,
-            selected_degree_programs,
-            selected_career_fields,
-        )
+    has_discovery_intent = any((
+        search_state["skills"],
+        search_state["degree_programs"],
+        search_state["career_fields"],
+    ))
+
+    discovery_attempted = bool(
+        search_state["query"] or has_discovery_intent
     )
-    discovery_attempted = bool(search_query or has_discovery_intent)
 
-    if search_mode == "web":
-        if cached_search:
-            # Reuse normalized Resource Discovery dictionaries. This performs no
-            # Brave API request and no candidate-page scraping.
-            discovery_results = cached_search.get("results", [])
-            discovery_attempted = cached_search.get("attempted", True)
-        elif discovery_attempted:
-            try:
-                discovery_results = search_web_resources(
-                    search_query,
-                    selected_skills,
-                    selected_degree_programs,
-                    selected_career_fields,
-                )
+    if cached_search is not None:
+        # Reuse previously normalized results from the user's session.
+        discovery_results = cached_search.get("results", [])
+        discovery_attempted = cached_search.get("attempted", True)
 
-                web_cache = build_search_state(                 
-                    search_query,
-                    selected_skills,
-                    selected_degree_programs,
-                    selected_career_fields,
-                    selected_prices,
-                    selected_sources,
-                    selected_resource_types,
-                    selected_formats,
-                    selected_difficulties,
-                )
-                web_cache.update(
-                    {
-                        "results": discovery_results,
-                        "attempted": True,
-                    }
-                )
-                request.session[LAST_WEB_SEARCH] = web_cache
-            except HTTPError as exc:
+    elif discovery_attempted:
+        try:
+            discovery_results = search_web_resources(
+                search_state["query"],
+                search_state["skills"],
+                search_state["degree_programs"],
+                search_state["career_fields"],
+            )
+
+            web_cache = build_search_state(
+                search_state["query"],
+                search_state["skills"],
+                search_state["degree_programs"],
+                search_state["career_fields"],
+                search_state["prices"],
+                search_state["sources"],
+                search_state["resource_types"],
+                search_state["formats"],
+                search_state["difficulties"],
+            )
+
+            web_cache.update({
+                "results": discovery_results,
+                "attempted": True,
+            })
+
+            request.session[LAST_WEB_SEARCH] = web_cache
+
+        except HTTPError as exc:
+            # Log the exception but display only its HTTP status code.
+            logger.exception("Resource Discovery HTTP error")
+
+            if exc.response is not None:
                 discovery_error = (
-                    f"Web resource search failed: HTTP {exc.response.status_code}"
-                    if exc.response is not None
-                    else "Web resource search failed: HTTP error."
+                    "Web resource search failed: "
+                    f"HTTP {exc.response.status_code}"
                 )
-
-            except Exception:
+            else:
                 discovery_error = (
-                    "Web resource search is temporarily unavailable. "
-                    "Please try again later."
+                    "Web resource search failed: HTTP error."
                 )
-    else:
-        if cached_search:
-            # UPDATED: Collections cache now stores collection IDs because the
-            # Collections view renders collection cards rather than resources.
-            collections = restore_local_collections(
-                cached_search.get("collection_ids", [])
-            )
-        else:
-            collections = search_local_collections(
-                search_query,
-                selected_skills,
-                selected_degree_programs,
-                selected_career_fields,
-                selected_prices,
-                selected_sources,
-                selected_resource_types,
-                selected_formats,
-                selected_difficulties,
+
+        except Exception:
+            # Do not expose internal Python exceptions to visitors.
+            logger.exception("Resource Discovery search failed")
+
+            discovery_error = (
+                "Web resource search is temporarily unavailable. "
+                "Please try again later."
             )
 
-            collection_cache = build_search_state(     
-                search_query,
-                selected_skills,
-                selected_degree_programs,
-                selected_career_fields,
-                selected_prices,
-                selected_sources,
-                selected_resource_types,
-                selected_formats,
-                selected_difficulties,
-            )
-            collection_cache["collection_ids"] = [
-                collection.collection_id
-                for collection in collections
-            ]
-            request.session[LAST_COLLECTION_SEARCH] = collection_cache
+    context = build_search_context(request, search_state, "web")
 
-    # Existing yellow swap button remains available only when the other mode has
-    # a cached result set in this user's session.
-    if search_mode == "web":
-        swap_target = (
-            "collections"
-            if request.session.get(LAST_COLLECTION_SEARCH)
-            else None
-        )
-        swap_label = "Last Collection Search" if swap_target else None
-    else:
-        swap_target = (
-            "web"
-            if request.session.get(LAST_WEB_SEARCH)
-            else None
-        )
-        swap_label = "Last Web Search" if swap_target else None
+    context.update({
+        "discovery_results": discovery_results,
+        "discovery_count": len(discovery_results),
+        "discovery_error": discovery_error,
+        "discovery_attempted": discovery_attempted,
+    })
 
-    context = {
-    "collections": collections,
-    "collection_count": len(collections),
-    "discovery_results": discovery_results,
-    "discovery_count": len(discovery_results),
-    "discovery_error": discovery_error,
-    "discovery_attempted": discovery_attempted,
-
-    "selected_skills": selected_skills,
-    "selected_degree_programs": selected_degree_programs,
-    "selected_career_fields": selected_career_fields,
-
-    "selected_prices": selected_prices,
-    "selected_sources": selected_sources,
-    "selected_resource_types": selected_resource_types,
-    "selected_formats": selected_formats,
-    "selected_difficulties": selected_difficulties,
-
-    "search_query": search_query,
-    "search_mode": search_mode,
-    "swap_target": swap_target,
-    "swap_label": swap_label,
-
-    **filter_options,
-}
-
-    return render(request, "front_end/index.html", context)
+    return render(request, "front_end/resource_discovery.html", context,)
 
 def collection_details(request, collection_id):
     # return curated collection and its details
