@@ -39,6 +39,7 @@ OptionSettings:
     RDS_DB_NAME: arn:aws:ssm:us-west-2:919551760563:parameter/callp/dev/rds/db_name
     DJANGO_SECRET_KEY: arn:aws:ssm:us-west-2:919551760563:parameter/callp/dev/django/secret_key
     RDS_USERNAME: arn:aws:ssm:us-west-2:919551760563:parameter/callp/dev/rds/username
+    BRAVE_SEARCH_API_KEY: arn:aws:ssm:us-west-2:919551760563:parameter/callp/dev/brave/api-key
   aws:autoscaling:launchconfiguration:
     SecurityGroups: sg-09bd8bca31993f340
     DisableIMDSv1: true

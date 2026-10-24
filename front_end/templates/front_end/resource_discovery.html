@@ -1,0 +1,54 @@
+
+{% extends "front_end/base.html" %}
+
+{% block title %}Resource Discovery{% endblock %}
+
+{% block content %}
+
+<div class="catalog-header">
+    <div class="catalog-heading">
+        <span class="catalog-label">
+            RESOURCE DISCOVERY
+        </span>
+
+        <h1 class="catalog-title">
+            Discover learning resources
+        </h1>
+    </div>
+
+    <div class="catalog-stats">
+        <span>
+            {{ discovery_count }} resource{{ discovery_count|pluralize }}
+        </span>
+    </div>
+</div>
+
+{% if discovery_error %}
+    <p class="discovery-error">
+        {{ discovery_error }}
+    </p>
+{% endif %}
+
+<section class="collection-grid">
+
+    {% for resource in discovery_results %}
+        <div class="collection-card-shell">
+            {% include "front_end/partials/discover_card.html" %}
+        </div>
+
+    {% empty %}
+        {% if not discovery_error %}
+            {% if discovery_attempted %}
+                <p>No learning resources matched this search.</p>
+            {% else %}
+                <p>
+                    Enter a search or select filters to discover
+                    learning resources.
+                </p>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+
+</section>
+
+{% endblock %}

@@ -1,1 +1,1 @@
-web: gunicorn --bind 127.0.0.1:8000 config.wsgi:application
+web: gunicorn --bind 127.0.0.1:8000 --timeout 90 config.wsgi:application

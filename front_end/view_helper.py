@@ -1,4 +1,5 @@
 """Query helpers for the unmanaged career-resource schema in models.py."""
+
 from django.db.models import Count, Q, Prefetch
 
 from .models import (
@@ -132,10 +133,48 @@ def restore_local_collections(collection_ids):
     return prepare_collection_cards([by_id[item_id] for item_id in collection_ids if item_id in by_id])
 
 
-def search_web_resources(search_query, selected_skills, selected_degree_programs, selected_career_fields):
-    """Web discovery integration was not present in the supplied archive."""
-    raise RuntimeError("Web resource discovery is not configured in this deployment")
+def search_web_resources(
+    search_query,
+    selected_skills,
+    selected_degree_programs,
+    selected_career_fields,
+    ):
+    """Discover external learning resources without saving them to MySQL."""
 
+    from resource_discovery.search import search_resources
+
+    filters = {
+        "skills": selected_skills,
+        "degree_programs": selected_degree_programs,
+        "career_fields": selected_career_fields,
+    }
+
+    resources = search_resources(
+        query=search_query,
+        filters=filters,
+    )
+
+    for resource in resources:
+        duration_seconds = resource.get("duration_seconds")
+
+        resource["display_duration"] = None
+
+        if duration_seconds is not None:
+            minutes = round(duration_seconds / 60)
+
+            if minutes < 60:
+                resource["display_duration"] = f"{minutes} min"
+            else:
+                hours, remaining_minutes = divmod(minutes, 60)
+
+                if remaining_minutes:
+                    resource["display_duration"] = (
+                        f"{hours} hr {remaining_minutes} min"
+                    )
+                else:
+                    resource["display_duration"] = f"{hours} hr"
+
+    return resources
 
 def build_search_state(search_query, selected_skills, selected_degree_programs,
                        selected_career_fields, selected_prices, selected_sources,
@@ -151,3 +190,80 @@ def build_search_state(search_query, selected_skills, selected_degree_programs,
         "formats": list(selected_formats),
         "difficulties": list(selected_difficulties),
     }
+
+# Added as part of issue #32 resolution:
+#   Retrieve the selected search criteria from the current request or
+#   from a previously cached search in the user's session.
+def get_search_state(request, cached_search=None):
+    """Return search criteria in a consistent dictionary structure."""
+
+    if cached_search is not None:
+        return {
+            "query": cached_search.get("query", ""),
+            "skills": cached_search.get("skills", []),
+            "degree_programs": cached_search.get("degree_programs", []),
+            "career_fields": cached_search.get("career_fields", []),
+            "prices": cached_search.get("prices", []),
+            "sources": cached_search.get("sources", []),
+            "resource_types": cached_search.get("resource_types", []),
+            "formats": cached_search.get("formats",[]),
+            "difficulties": cached_search.get("difficulties", []),
+        }
+
+    return{
+        "query": request.GET.get("search", "").strip(),
+        "skills": request.GET.getlist("skill"),
+        "degree_programs": request.GET.getlist("degree_program"),
+        "career_fields": request.GET.getlist("career_field"),
+        "prices": request.GET.getlist("price"),
+        "sources": request.GET.getlist("source"),
+        "resource_types": request.GET.getlist("resource_type"),
+        "formats": request.GET.getlist("format"),
+        "difficulties": request.GET.getlist("difficulty"),
+    }
+
+# Added as part of issue #32 resolution:
+#   Build the common template for Collections and Resource Discovery.
+#   Preserve the previous-search button using the existing session keys.
+def build_search_context(request, search_state, search_mode):
+    """Return shared filter, search, and navigation context"""
+
+    if search_mode == "web":
+        has_previous_search = (
+            LAST_COLLECTION_SEARCH in request.session
+        )
+
+        if has_previous_search:
+            swap_target = "collections"
+            swap_label = "Last Collection Search"
+        else:
+            swap_target = None
+            swap_label = None
+
+    else:
+        has_previous_search = LAST_WEB_SEARCH in request.session
+
+        if has_previous_search:
+            swap_target = "web"
+            swap_label = "Last Web Search"
+        else:
+            swap_target = None
+            swap_label = None
+
+    context = {
+        "search_query": search_state["query"],
+        "selected_skills": search_state["skills"],
+        "selected_degree_programs": search_state["degree_programs"],
+        "selected_career_fields": search_state["career_fields"],
+        "selected_prices": search_state["prices"],
+        "selected_sources": search_state["sources"],
+        "selected_resource_types": search_state["resource_types"],
+        "selected_formats": search_state["formats"],
+        "selected_difficulties": search_state["difficulties"],
+        "search_mode": search_mode,
+        "swap_target": swap_target,
+        "swap_label": swap_label,
+        **get_filter_options(),
+    }
+
+    return context

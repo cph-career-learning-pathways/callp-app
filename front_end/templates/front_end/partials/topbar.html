@@ -9,7 +9,9 @@
   <form
     id="search-form"
     class="search-form"
-    action="{% url 'index' %}"
+    action="{% if search_mode == 'web' %}{% url 'resource_discovery' %}{% else %}{% url 'index' %}{% endif %}"
+    data-collections-url="{% url 'index' %}"
+    data-discovery-url="{% url 'resource_discovery' %}"
     method="GET">
 
     <label for="search" class="sr-only">
@@ -273,12 +275,20 @@
       </button>
 
       <!-- Restore Previous Search -->
+       <!--
+          UPDATED as part of issue #32 resolution:
+            Override the search form's destination when restoring a previous search.
+            Ensure the request reaches the current page's Django view, regardless
+            of the search mode selected, so cached results can be restored
+            without triggering another Brave API request.
+        -->
       {% if swap_target %}
         <button
           class="search-swap-button"
           type="submit"
           name="swap_to"
           value="{{ swap_target }}"
+          formaction="{% if search_mode == 'web' %}{% url 'resource_discovery' %}{% else %}{% url 'index' %}{% endif %}"
           formnovalidate>
 
           <span aria-hidden="true">&#8644;</span>
