@@ -170,8 +170,12 @@ def inspect_resource(candidate):
     if hostname and hostname.startswith("www."):
         hostname = hostname[4:]
 
+    # UPDATED as part of issue #32 resolution:
+    # Prefer Open Graph metadata while retaining Brave's title fallback.
+    # Use the standard HTML description when Open Graph is unavailable.
     og_title = soup.find("meta", property="og:title")
     og_description = soup.find("meta", property="og:description")
+    meta_description = soup.find("meta", attrs={"name": "description"})
 
     title = (
         og_title.get("content")
@@ -179,11 +183,13 @@ def inspect_resource(candidate):
         else candidate.get("title")
     )
 
-    description = (
-        og_description.get("content")
-        if og_description and og_description.get("content")
-        else None
-    )
+    description = None
+
+    if og_description and og_description.get("content"):
+        description = og_description.get("content").strip()
+
+    elif meta_description and meta_description.get("content"):
+        description = meta_description.get("content").strip()
 
     json_ld_types = extract_json_ld_types(soup)
 

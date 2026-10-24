@@ -94,24 +94,41 @@ def collect_pricing_evidence(
 
     return evidence
 
+# UPDATED as part of issue #32 resolution:
+#   Prioritize pricing evidence describing the resource itself.
+#   Use webpage text only when the title and description provide
+#   insufficient evidence, reducing unrelated pricing classifications.
 def classify_pricing_model(
     title=None,
     description=None,
     page_text=None,
     json_ld_types=None,
 ):
+    """Classify resource pricing using prioritized metadata evidence."""
+
     json_ld_types = json_ld_types or []
 
-    evidence = collect_pricing_evidence(
+    # Prefer metadata describing the specific resource.
+    primary_evidence = collect_pricing_evidence(
         title=title,
-        description=description,
-        page_text=page_text,
+        description=description
     )
 
     is_collection = (
         "ItemList" in json_ld_types
         or "CollectionPage" in json_ld_types
     )
+
+    has_primary_evidence = any(primary_evidence.values())
+
+    if has_primary_evidence:
+        evidence = primary_evidence
+
+    else:
+        # Use webpage text only when primary metadata is inconclusive.
+        evidence = collect_pricing_evidence(
+            page_text=page_text,
+        )
 
     # Collections containing mixed access signals
     if is_collection:
@@ -136,15 +153,15 @@ def classify_pricing_model(
 
     # Subscription-required access
     if evidence["subscription"] or evidence["paywall"]:
-        return "paid_subscription"
+        return "subscription"
 
     # Free trial implies eventual paid access
     if evidence["free_trial"]:
-        return "paid_subscription"
+        return "subscription"
 
     # One-time purchase
     if evidence["one_time_purchase"]:
-        return "paid_one_time"
+        return "one-time"
 
     # Partial/free-tier access
     if evidence["free_audit"] or evidence["limited_free"]:
@@ -156,18 +173,41 @@ def classify_pricing_model(
 
     return None
 
-
-
-
-
+# UPDATED as part of issue #32 resolution:
+#   Recognize additional Schema.org structured-data types while
+#   preserving the resource classifications allowed by the database.
+#   Return None when the available metadata is insufficient.
 def classify_resource_type(json_ld_types):
-    if "Course" in json_ld_types:
+    """Classify a resource using its JSON-LD structured-data types."""
+
+    if not json_ld_types:
+        return None
+
+    course_types = {
+        "Course",
+    }
+
+    article_types = {
+        "Article",
+        "NewsArticle",
+        "BlogPosting",
+        "TechArticle",
+        "ScholarlyArticle",
+    }
+
+    collection_types = {
+        "ItemList",
+        "CollectionPage",
+    }
+
+
+    if any(item_type in course_types for item_type in json_ld_types):
         return "course"
 
-    if "Article" in json_ld_types:
+    if any(item_type in article_types for item_type in json_ld_types):
         return "article"
 
-    if "ItemList" in json_ld_types or "CollectionPage" in json_ld_types:
+    if any(item_type in collection_types for item_type in json_ld_types):
         return "collection"
 
     return None
