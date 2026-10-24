@@ -193,7 +193,13 @@ def inspect_resource(candidate):
 
     json_ld_types = extract_json_ld_types(soup)
 
-    if "youtube.com" in url:
+    # UPDATED as part of issue #32 resolution:
+    #   Validate the hostname to prevent unrelated domains from
+    #   being incorrectly identified as YouTube resources.
+    if hostname and (
+        hostname == "youtube.com"
+        or hostname.endswith(".youtube.com")
+    ):
         youtube_type = get_youtube_resource_type(url)
 
         if youtube_type == "video":
