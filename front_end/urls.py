@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path("", views.index, name="index"),
     path("resources/", views.resource_query, name="resource_query"),
+    path("dashboard/", views.dashboard_student, name="dashboard_student"),
 
     # Issue #32: Resource Discovery
     path(

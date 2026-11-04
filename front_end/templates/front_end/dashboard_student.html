@@ -1,0 +1,42 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}CaLLP | Student Dashboard{% endblock %}</title>
+  <link rel="stylesheet"
+        href="{% static 'css/global.css' %}" >
+</head>
+
+<body>
+
+  {% include "front_end/partials/topbar.html" %}
+
+  <div class="user-nav-panel">
+    <div class="left-user">
+    </div>
+    <div class="left-nav">
+        <ul>
+            <li>Home</li>
+            <li>Dshboard</li>
+            <li>Search</li>
+            <li>Saved</li>
+            <li>Logout</li>
+        </ul>
+    </div>
+  </div>
+
+  <main class="hero">
+    <div class="dash-tabs">
+    </div>
+
+    this is where the 4 different tab contents will be depending on selected tab
+
+  </main>
+  <div class="bottom-nav">
+  </div>
+  
+  <script src="{% static 'javascript/main.js' %}" defer></script>
+</body>
+</html>
