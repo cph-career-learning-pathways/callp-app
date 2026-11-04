@@ -1,12 +1,11 @@
 """Django port of the PHP career-interest questionnaire.
 
 Uses the existing MySQL schema without migrations to legacy tables.
-The account picker is DEVELOPMENT ONLY; production uses authenticated mapping.
+Accounts are resolved from the authenticated Django user.
 """
 import json
 import logging
 import re
-from django.conf import settings
 from django.db import connection, transaction
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import redirect, render
@@ -16,8 +15,6 @@ from django.contrib.auth.decorators import login_required
 log = logging.getLogger(__name__)
 GENERAL_PARENT = '03000079'
 MAX_INTERESTS = 100
-
-from django.db import connection
 
 
 def get_career_account_id(request):
@@ -45,10 +42,6 @@ def rows(sql, params=()):
         cursor.execute(sql, params)
         names = [c[0] for c in cursor.description]
         return [dict(zip(names, item)) for item in cursor.fetchall()]
-
-
-def accounts():
-    return rows("SELECT acc_id, acc_fname, acc_lname FROM account WHERE acc_role <> 'system' AND acc_status = 'active' ORDER BY acc_id ASC")
 
 
 def selected_account(request):
@@ -120,13 +113,13 @@ def questionnaire(request):
     user = selected_account(request)
     if not user:
         return render(request, 'career_interests/questionnaire.html', {
-            'account': None, 'accounts': accounts() if settings.DEBUG and getattr(settings, 'CAREER_DEV_ACCOUNT_SWITCH', False) else [],
+            'account': None,
         })
     cats = categories()
     existing = interests(user['acc_id'])
     parents = [r for r in existing if r['category_type'] in ('degree program', 'career field')]
     return render(request, 'career_interests/questionnaire.html', {
-        'account': user, 'accounts': accounts() if settings.DEBUG and getattr(settings, 'CAREER_DEV_ACCOUNT_SWITCH', False) else [],
+        'account': user,
         'has_profile': bool(parents), 'profile_parents': parents,
         'degrees': cats['degree program'], 'careers': cats['career field'], 'skills': cats['skill'],
         'existing_ids': [r['category_id'] for r in existing],

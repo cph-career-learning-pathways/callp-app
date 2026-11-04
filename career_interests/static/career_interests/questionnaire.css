@@ -103,8 +103,6 @@ button.secondary:hover { background: var(--green-light); }
 .actions { margin-top: 1.7rem; border-top: 1px solid var(--line); padding-top: 1.5rem; text-align: center; }
 .actions button { width: 100%; min-height: 52px; font-size: 1.03rem; border-radius: 12px; }
 .message { padding: 1rem; border: 1px solid #a6cfb8; border-radius: 11px; background: #eaf6ec; color: #205c3e; }
-#account-switch { background: var(--panel); border: 1px solid var(--line); border-radius: 13px; padding: 1.2rem; }
-#account-switch button { margin-top: .8rem; }
 [hidden] { display: none !important; }
 @media (max-width: 560px) {
   main { padding: .4rem; }
