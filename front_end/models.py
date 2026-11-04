@@ -4,6 +4,7 @@ Requires Django 5.2+ for CompositePrimaryKey.
 All tables are unmanaged: Django will not create, alter, or drop them.
 """
 from django.db import models
+from django.conf import settings
 
 
 YES_NO = [('Y', 'Yes'), ('N', 'No')]
@@ -16,6 +17,14 @@ class Account(models.Model):
     acc_email = models.CharField(max_length=50, unique=True)
     acc_role = models.CharField(max_length=10, choices=[(x, x) for x in ('student', 'teacher', 'admin', 'alumni', 'developer', 'system')])
     acc_status = models.CharField(max_length=20, choices=[(x, x) for x in ('active', 'inactive', 'suspended', 'pending', 'locked', 'archived', 'deleted')])
+    auth_user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        models.DO_NOTHING,
+        blank=True,
+        null=True,
+        db_column='auth_user_id',
+        related_name='career_account'
+    )
 
     class Meta:
         managed = False
