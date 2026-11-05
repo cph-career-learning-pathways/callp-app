@@ -60,6 +60,9 @@ select {
 .topbar-brand {
     flex: 0 1 320px;
 }
+.topbar-brand a {
+    font-size: 2em;
+}
 
 .site-title {
     color: var(--old-growth-green);
