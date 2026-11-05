@@ -1,0 +1,174 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Career interest questionnaire</title>
+    <link rel="stylesheet" href="{% static 'career_interests/questionnaire.css' %}">
+</head>
+<body>
+    <main>
+        <h1>Career interest questionnaire</h1>
+
+        {% if account %}
+            <div class="who-line">
+                <p class="hint">Answering as {{ account.acc_fname }} {{ account.acc_lname }}</p>
+            </div>
+
+            {% if saved %}
+                <p class="message">Your interests were saved successfully.</p>
+            {% endif %}
+
+            {% if profile_parents %}
+                <p class="hint">
+                    Existing interests:
+                    {% for p in profile_parents %}
+                        {{ p.category_name }} ({{ p.category_type }}){% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </p>
+            {% endif %}
+
+            <form
+                id="interest-form"
+                method="post"
+                action="{% url 'career_interests:save' %}"
+                data-suggestions-url="{% url 'career_interests:suggestions' %}"
+            >
+                {% csrf_token %}
+                <input type="hidden" name="payload" id="payload">
+
+                <section class="panel">
+                    <h2>1. Career and degree interests</h2>
+
+                    {% if has_profile %}
+                        <fieldset>
+                            <legend>Would you like to update your interest profile?</legend>
+                            <label>
+                                <input type="radio" name="update_profile" value="yes"> Yes
+                            </label>
+                            <label>
+                                <input type="radio" name="update_profile" value="no" checked> No
+                            </label>
+                        </fieldset>
+
+                        <div id="update-section" hidden>
+                            <fieldset>
+                                <legend>Do you have a new degree planned?</legend>
+                                <label>
+                                    <input type="radio" name="add_new_degree" value="yes"> Yes
+                                </label>
+                                <label>
+                                    <input type="radio" name="add_new_degree" value="no" checked> No
+                                </label>
+
+                                <div id="new-degree-section" hidden>
+                                    <label for="new_degree">New degree program</label>
+                                    <select id="new_degree">
+                                        <option value="">-- Select degree --</option>
+                                        {% for d in degrees %}
+                                            {% if d.category_id not in existing_ids %}
+                                                <option value="{{ d.category_id }}">{{ d.category_name }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </fieldset>
+
+                            <fieldset>
+                                <legend>Do you have a new career in mind?</legend>
+                                <label>
+                                    <input type="radio" name="add_new_career" value="yes"> Yes
+                                </label>
+                                <label>
+                                    <input type="radio" name="add_new_career" value="no" checked> No
+                                </label>
+
+                                <div id="new-career-section" hidden>
+                                    <label for="new_career">New career field</label>
+                                    <select id="new_career">
+                                        <option value="">-- Select career --</option>
+                                        {% for c in careers %}
+                                            {% if c.category_id not in existing_ids %}
+                                                <option value="{{ c.category_id }}">{{ c.category_name }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </fieldset>
+                    {% else %}
+                        <fieldset>
+                            <label for="major">What is your degree program?</label>
+                            <select id="major">
+                                <option value="">-- Select degree --</option>
+                                {% for d in degrees %}
+                                    <option value="{{ d.category_id }}">{{ d.category_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <p class="hint">Automatically saved at 5/5.</p>
+                        </fieldset>
+
+                        <fieldset>
+                            <label for="career">Which career field interests you most?</label>
+                            <select id="career">
+                                <option value="">-- Select career --</option>
+                                {% for c in careers %}
+                                    <option value="{{ c.category_id }}">{{ c.category_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <p class="hint">Automatically saved at 5/5.</p>
+                        </fieldset>
+                    {% endif %}
+
+                    <div id="additional-career">
+                        <h3>Additional career interests</h3>
+                        <p class="hint">Add other careers and rate your interest from 1 to 5.</p>
+                        <button type="button" id="add-career">+ Add career interest</button>
+                        <div id="career-entries"></div>
+                    </div>
+
+                    {% if has_profile %}
+                        </div><!-- #update-section -->
+                    {% endif %}
+                </section>
+
+                <section class="panel" id="skills-section" {% if has_profile %}hidden{% endif %}>
+                    <h2>2. Skills and interests</h2>
+
+                    <h3>Skills related to your degree and career</h3>
+                    <p class="hint">Choose your degree and career to see up to three recommended skills.</p>
+                    <div id="specific-skills">
+                        <p class="hint">Loading suggestions...</p>
+                    </div>
+
+                    <h3>General career skills</h3>
+                    <p class="hint">
+                        Which of these useful general career skills would you like to learn more about?
+                        Check each skill that interests you, then rate your interest from 1 to 5.
+                    </p>
+                    <div id="general-skills">
+                        <p class="hint">Loading general skills...</p>
+                    </div>
+
+                    <h3>Add more skills</h3>
+                    <p class="hint">Search for any other skill in the database and choose an interest level.</p>
+                    <button type="button" id="add-skill">+ Add skill interest</button>
+                    <div id="skill-entries"></div>
+                </section>
+
+                <div class="actions">
+                    <p class="hint">Finished? Save your selections to your interest profile.</p>
+                    <button type="submit">Save interests &amp; finish ✓</button>
+                </div>
+            </form>
+
+            {{ careers|json_script:'career-data' }}
+            {{ skills|json_script:'skill-data' }}
+            {{ existing_ids|json_script:'existing-data' }}
+            <script src="{% static 'career_interests/questionnaire.js' %}" defer></script>
+        {% else %}
+            <p class="hint">Please sign in to access your questionnaire.</p>
+        {% endif %}
+    </main>
+</body>
+</html>
