@@ -299,10 +299,41 @@
     </div>
   </form>
 
-  <button class="account-button" type="button">
-    <span class="account-icon" aria-hidden="true">
-      &#9817;
-    </span>
-    Account
-  </button>
+  <!-- Account navigation: available across pages using front_end/base.html. -->
+  <details class="account-dropdown" data-account-dropdown>
+    <summary class="account-button">
+      <span class="account-icon" aria-hidden="true">&#9817;</span>
+      {% if user.is_authenticated %}
+        <span class="account-greeting">
+          Hello,
+          {% if user.first_name or user.last_name %}
+            {{ user.first_name }} {{ user.last_name }}
+          {% else %}
+            {{ user.username }}
+          {% endif %}
+        </span>
+      {% else %}
+        <span>Account</span>
+      {% endif %}
+      <span class="account-chevron" aria-hidden="true">&#9662;</span>
+    </summary>
+
+    <nav class="account-menu" aria-label="Account options">
+      {% if user.is_authenticated %}
+        <a href="{% url 'career_interests:questionnaire' %}">
+          Career Interests
+        </a>
+        <a href="{% url 'password_change' %}">
+          Change Password
+        </a>
+        <form method="post" action="{% url 'logout' %}" class="account-logout-form">
+          {% csrf_token %}
+          <button type="submit" class="account-menu-action">Sign Out</button>
+        </form>
+      {% else %}
+        <a href="{% url 'login' %}">Log In</a>
+        <a href="{% url 'signup' %}">Create Account</a>
+      {% endif %}
+    </nav>
+  </details>
 </header>
