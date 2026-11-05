@@ -745,7 +745,6 @@ select {
     padding: 35px 60px 20px;
     background: var(--surface);
     border-top: 2px solid var(--old-growth-green);
-    color: var(--old-growth-green);
 }
 .footer-section {
     display:flex;
@@ -754,19 +753,19 @@ select {
 }
 .footer-section h3 {
     margin: 0 0 8px;
-    font-size: 13px;
+    font-size: 1.8em;
     letter-spacing: 2px;
 }
 .footer-section a {
     font-size: 13px;
+    color: var(--old-growth-green);
 }
 .footer-bottom {
     grid-column: 1 / -1;
     margin-top: 30px;
     padding-top: 15px;
     text-align: center;
-    font-size: 11px;
-    letter-spacing: 1px;
+    font-size: 0.9em;
 }
 
 @media (max-width: 1100px) {
@@ -1333,9 +1332,3 @@ select {
     }
 }
 
-/* DELETE THIS IT ONLY EXISTS FOR TESTING */
-.footer-bottom {
-    grid-column: 1 / -1 !important;
-    text-align: center !important;
-    background: red;
-}
