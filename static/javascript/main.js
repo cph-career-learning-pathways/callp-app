@@ -1185,3 +1185,23 @@ detailBackButton?.addEventListener("click", () => {
         detailCloseButton?.focus();
     }
 });
+
+
+// Close the account menu when clicking elsewhere or pressing Escape.
+// The native <details> element manages toggling and keyboard activation.
+const accountDropdown = document.querySelector("[data-account-dropdown]");
+
+if (accountDropdown) {
+    document.addEventListener("click", (event) => {
+        if (!accountDropdown.contains(event.target)) {
+            accountDropdown.open = false;
+        }
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && accountDropdown.open) {
+            accountDropdown.open = false;
+            accountDropdown.querySelector("summary")?.focus();
+        }
+    });
+}
