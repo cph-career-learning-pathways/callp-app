@@ -747,20 +747,20 @@ select {
     border-top: 2px solid var(--old-growth-green);
     color: var(--old-growth-green);
 }
-.foot-section {
+.footer-section {
     display:flex;
     flex-direction: column;
     gap:9px;
 }
-.foot-section h3 {
+.footer-section h3 {
     margin: 0 0 8px;
     font-size: 13px;
     letter-spacing: 2px;
 }
-.foot-section a {
+.footer-section a {
     font-size: 13px;
 }
-.foot-bottom {
+.footer-bottom {
     grid-column: 1 / -1;
     margin-top: 30px;
     padding-top: 15px;
@@ -1331,4 +1331,11 @@ select {
     .account-dropdown > .account-button {
         margin-top: 0;
     }
+}
+
+/* DELETE THIS IT ONLY EXISTS FOR TESTING */
+.footer-bottom {
+    grid-column: 1 / -1 !important;
+    text-align: center !important;
+    background: red;
 }
