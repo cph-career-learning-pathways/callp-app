@@ -284,3 +284,6 @@ def collection_details(request, collection_id):
 def resource_query(request):
     resources = CareerResource.objects.all()[:50]
     return render(request, "front_end/resource_query.html", {"resources": resources})
+
+def dashboard_student(request):
+    return render(request, "front_end/dashboard_student.html")
