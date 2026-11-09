@@ -28,4 +28,6 @@ urlpatterns = [
     path("interests/", include("career_interests.urls")),
     # Front-end app
     path("", include("front_end.urls")),
+    # Dashboard
+    path("", include("student_dashboard.urls")),
 ]
