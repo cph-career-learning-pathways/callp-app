@@ -23,3 +23,6 @@ def UserManual(request):
 
 def GitHubPage(request):
     return redirect('https://github.com/cph-career-learning-pathways/callp-app')
+
+def HumboldtPage(request):
+    return redirect('https://humboldt.edu')

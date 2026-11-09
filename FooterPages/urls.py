@@ -1,7 +1,7 @@
 # Urls for footer pages.
 from django.urls import path
 
-from .views import AboutUs, ContactUs, Feedback, LicensePage, UserManual, GitHubPage
+from .views import AboutUs, ContactUs, Feedback, HumboldtPage, LicensePage, UserManual, GitHubPage
 
 
 urlpatterns = [
@@ -11,4 +11,5 @@ urlpatterns = [
     path("license/", LicensePage, name="license-page"),
     path("user-manual/", UserManual, name="user-manual"),
     path("github/", GitHubPage, name="github-page"),
+    path("humboldt/", HumboldtPage, name="humboldt-page"),
 ]
