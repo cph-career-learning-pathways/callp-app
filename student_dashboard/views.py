@@ -5,5 +5,5 @@ from django.shortcuts import render
 
 @login_required
 def dashboard_student(request):
-    return render(request, "dashboard_student.html")
+    return render(request, "dashboard.html")
 
