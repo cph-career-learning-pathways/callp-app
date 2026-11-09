@@ -1,12 +1,18 @@
-{extends "front_end/base.html"}
+
+{% extends "front_end/base.html" %}
 
 {% block title %}Feedback{% endblock %}
 
 {% block content %}
 <h2>Feedback</h2>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Submit</button>
-</form>
+
+<p>
+    We value your feedback about the
+    Career &amp; Lifelong Learning Pathway.
+</p>
+
+<p>
+    Feedback submission functionality
+    is not yet available.
+</p>
 {% endblock %}

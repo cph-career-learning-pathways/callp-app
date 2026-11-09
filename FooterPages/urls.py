@@ -10,4 +10,5 @@ urlpatterns = [
     path("feedback/", Feedback, name="feedback"),
     path("license/", LicensePage, name="license"),
     path("user-manual/", UserManual, name="user-manual"),
+    path("github/", GitHubPage, name="github-page"),
 ]
