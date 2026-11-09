@@ -1,0 +1,24 @@
+{% extends "front_end/base.html" %}
+
+{% block title %}User Manual{% endblock %}
+
+{% block content %}
+<h2>User Manual</h2>
+<p>Welcome to the User Manual for our application. This guide will help you navigate and utilize the features of our platform effectively.</p>
+<h3>Getting Started</h3>
+<p>To get started, please follow these steps:</p>
+<ol>
+  <li>Sign up for an account or log in if you already have one.</li>
+  <li>Explore the dashboard to familiarize yourself with the available features.</li>
+  <li>Refer to the specific sections below for detailed instructions on using each feature.</li>
+</ol>
+<h3>Features Overview</h3>
+<p>Our application offers a variety of features designed to enhance your experience:</p>
+<ul>
+  <li><strong>Feature 1:</strong> Description of Feature 1.</li>
+  <li><strong>Feature 2:</strong> Description of Feature 2.</li>
+  <li><strong>Feature 3:</strong> Description of Feature 3.</li>
+</ul>
+<h3>Support</h3>
+<p>If you encounter any issues or have questions, please reach out to our support team through the <a href="{% url 'ContactUs' %}">Contact Us</a> page or provide feedback via the <a href="{% url 'Feedback' %}">Feedback</a> form.</p>
+{% endblock %}

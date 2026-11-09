@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "front_end",
     "accounts",
     "career_interests",
+    "FooterPages",
 ]
 
 MIDDLEWARE = [
