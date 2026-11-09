@@ -13,6 +13,12 @@
 
   {% include "front_end/partials/topbar.html" %}
 
+  <section>
+    <h3>Daily streak</h3>
+    <p>{{ dashboard.streak }} days</p>
+  </section>
+
+
   <div class="user-nav-panel">
     <div class="left-user">
     </div>
@@ -32,6 +38,23 @@
     </div>
 
     this is where the 4 different tab contents will be depending on selected tab
+
+    <section>
+      <h3>My Learning Pathways</h3>
+
+      {% for pathway in dashboard.pathways %}
+        <article>
+            <h4>{{ pathway.title }}</h4>
+            <progress
+                value="{{ pathway.progress }}"
+                max="100">
+            </progress>
+            <span>{{ pathway.progress }}%</span>
+        </article>
+      {% empty %}
+        <p>No learning pathways yet.</p>
+      {% endfor %}
+    </section>
 
   </main>
   <div class="bottom-nav">
