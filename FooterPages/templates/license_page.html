@@ -1,8 +1,38 @@
 {% extends "front_end/base.html" %}
+{% load static %}
 
-{% block title %}License Page{% endblock %}
+{% block title %}MIT License | CaLLP{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'FooterPages/footer_pages.css' %}">{% endblock %}
 
 {% block content %}
-<h2>License Page</h2>
-<p>This project is licensed under the MIT License.</p>
+<article class="info-page" aria-labelledby="info-page-title">
+  <header class="info-page__header">
+    <p class="info-page__eyebrow">Open source</p>
+    <h1 class="info-page__title" id="info-page-title">MIT License</h1>
+    <p class="info-page__intro">License terms for the Career &amp; Lifelong Learning Pathway project.</p>
+  </header>
+  <section class="info-page__panel" aria-label="Full MIT License text">
+    <pre class="info-page__license">MIT License
+
+Copyright (c) 2026 cph-career-learning-pathways
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</pre>
+  </section>
+</article>
 {% endblock %}

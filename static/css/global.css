@@ -739,33 +739,56 @@ select {
     border: 0;
 }
 
+/* Shared footer, using the same palette and spacing as the catalog. */
 .footer {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    padding: 35px 60px 20px;
-    background: var(--surface);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 30px 36px;
+    padding: 36px max(28px, 5vw) 20px;
     border-top: 2px solid var(--old-growth-green);
+    background: var(--surface);
 }
 .footer-section {
-    display:flex;
+    display: flex;
     flex-direction: column;
-    gap:9px;
+    align-items: flex-start;
+    gap: 10px;
 }
 .footer-section h3 {
-    margin: 0 0 8px;
-    font-size: 1.8em;
-    letter-spacing: 2px;
+    margin: 0 0 6px;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 20px;
+    letter-spacing: 0;
 }
 .footer-section a {
-    font-size: 13px;
     color: var(--old-growth-green);
+    font-size: 14px;
+    line-height: 1.5;
+    text-underline-offset: 3px;
+}
+.footer-section a:hover { color: var(--sea-glass); }
+.footer-section a:focus-visible {
+    outline: 3px solid var(--sea-glass);
+    outline-offset: 3px;
 }
 .footer-bottom {
     grid-column: 1 / -1;
-    margin-top: 30px;
-    padding-top: 15px;
+    margin-top: 6px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
     text-align: center;
-    font-size: 0.9em;
+}
+@media (max-width: 750px) {
+    .footer {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding: 30px 20px 18px;
+    }
+}
+@media (max-width: 500px) {
+    .footer { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 1100px) {

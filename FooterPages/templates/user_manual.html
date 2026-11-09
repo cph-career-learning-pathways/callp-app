@@ -1,25 +1,41 @@
 {% extends "front_end/base.html" %}
+{% load static %}
 
-{% block title %}User Manual{% endblock %}
+{% block title %}User Manual | CaLLP{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'FooterPages/footer_pages.css' %}">{% endblock %}
 
 {% block content %}
-<h2>User Manual</h2>
-<p>Welcome to the User Manual for our application. This guide will help you navigate and utilize the features of our platform effectively.</p>
-<h3>Getting Started</h3>
-<p>To get started, please follow these steps:</p>
-<ol>
-  <li>Sign up for an account or log in if you already have one.</li>
-  <li>Explore the dashboard to familiarize yourself with the available features.</li>
-  <li>Refer to the specific sections below for detailed instructions on using each feature.</li>
-</ol>
-<h3>Features Overview</h3>
-<p>Our application offers a variety of features designed to enhance your experience:</p>
-<ul>
-  <li><strong>Feature 1:</strong> Description of Feature 1.</li>
-  <li><strong>Feature 2:</strong> Description of Feature 2.</li>
-  <li><strong>Feature 3:</strong> Description of Feature 3.</li>
-</ul>
-<h3>Support</h3>
-<p>If you encounter any issues or have questions, please reach out to our support team here: <a href="{% url 'contact-us' %}">Contact Us</a> </p>
-   <p>How do you think we're doing?: <a href="{% url 'feedback' %}">Give us Feedback</a></p>
+<article class="info-page" aria-labelledby="info-page-title">
+  <header class="info-page__header">
+    <p class="info-page__eyebrow">Documentation</p>
+    <h1 class="info-page__title" id="info-page-title">User Manual</h1>
+    <p class="info-page__intro">A quick guide to exploring collections and discovering career-learning resources.</p>
+  </header>
+
+  <section class="info-page__panel" aria-labelledby="starting-heading">
+    <h2 id="starting-heading">Getting started</h2>
+    <ol>
+      <li><a href="{% url 'index' %}">Browse learning collections</a> from the home page.</li>
+      <li>Use the search bar and category filters to narrow your results.</li>
+      <li>Open a collection to see its description and related resources.</li>
+    </ol>
+  </section>
+
+  <section class="info-page__panel" aria-labelledby="discovery-heading">
+    <h2 id="discovery-heading">Finding resources</h2>
+    <p>Switch the search mode between Collections and Web to explore different kinds of resources.</p>
+    <p>For broader results, visit <a href="{% url 'resource_discovery' %}">Web Resource Discovery</a>.</p>
+  </section>
+
+  <section class="info-page__panel" aria-labelledby="account-heading">
+    <h2 id="account-heading">Your account</h2>
+    <p><a href="{% url 'signup' %}">Create an account</a> or <a href="{% url 'login' %}">log in</a> using the Account menu in the top bar.</p>
+    <p>If you forget your password, use the reset link on the login page.</p>
+  </section>
+
+  <section class="info-page__panel" aria-labelledby="support-heading">
+    <h2 id="support-heading">Support</h2>
+    <p>Visit <a href="{% url 'contact-us' %}">Contact Us</a> for available support information or view the <a href="{% url 'feedback' %}">Feedback</a> page.</p>
+  </section>
+</article>
 {% endblock %}

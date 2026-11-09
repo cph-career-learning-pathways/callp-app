@@ -1,16 +1,24 @@
 {% extends "front_end/base.html" %}
+{% load static %}
 
-{% block title %}Contact Us{% endblock %}
+{% block title %}Contact Us | CaLLP{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'FooterPages/footer_pages.css' %}">{% endblock %}
 
 {% block content %}
-<h2>Contact Us</h2>
+<article class="info-page" aria-labelledby="info-page-title">
+  <header class="info-page__header">
+    <p class="info-page__eyebrow">Help &amp; support</p>
+    <h1 class="info-page__title" id="info-page-title">Contact Us</h1>
+    <p class="info-page__intro">Questions about the Career &amp; Lifelong Learning Pathway?</p>
+  </header>
 
-<p>
-    Have questions about the Career &amp;
-    Lifelong Learning Pathway?
-</p>
-
-<p>
-    Contact information will be available here.
-</p>
+  <section class="info-page__panel" aria-labelledby="contact-heading">
+    <h2 id="contact-heading">Getting in touch</h2>
+    <p>Our team's contact details will be added here.</p>
+    <p class="info-page__callout">This page is informational only. No contact form or message submission is available yet.</p>
+    <div class="info-page__actions">
+      <a href="{% url 'user-manual' %}">View user manual</a>
+    </div>
+  </section>
+</article>
 {% endblock %}

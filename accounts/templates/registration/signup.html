@@ -1,13 +1,30 @@
-<!-- templates/registration/signup.html -->
 {% extends "front_end/base.html" %}
+{% load static %}
 
-{% block title %}Sign Up{% endblock %}
+{% block title %}Create Account | CaLLP{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'accounts/password_reset.css' %}">{% endblock %}
 
 {% block content %}
-<h2>Sign up</h2>
-<form method="post">
-  {% csrf_token %}
-  {{ form }}
-  <button type="submit">Sign Up</button>
-</form>
+<section class="account-panel" aria-labelledby="account-title">
+  <p class="account-eyebrow">Get started</p>
+  <h1 id="account-title">Create an account</h1>
+  <p class="account-lede">Register to access your Career &amp; Lifelong Learning Pathway account.</p>
+
+  <form method="post" class="account-form">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="account-errors" role="alert">{{ form.non_field_errors }}</div>
+    {% endif %}
+    {% for field in form %}
+      <div class="account-field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<div class="account-help">{{ field.help_text }}</div>{% endif %}
+        {% for error in field.errors %}<p class="account-field-error" role="alert">{{ error }}</p>{% endfor %}
+      </div>
+    {% endfor %}
+    <button class="account-button" type="submit">Create account</button>
+  </form>
+  <p class="account-footer">Already have an account? <a href="{% url 'login' %}">Log in</a>.</p>
+</section>
 {% endblock %}
