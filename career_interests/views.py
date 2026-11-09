@@ -229,6 +229,8 @@ def save_interests(request):
 
 
 @require_GET
+@login_required
 def questionnaire_saved(request):
-    from django.urls import reverse
-    return redirect(reverse('career_interests:questionnaire') + '?saved=1')
+    # A successful POST redirects here (POST/redirect/GET). The browser
+    # shows the confirmation before returning to the main home page.
+    return render(request, 'career_interests/saved.html')
