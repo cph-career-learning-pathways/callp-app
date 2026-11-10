@@ -1,0 +1,23 @@
+{% extends "front_end/base.html" %}
+{% load static %}
+
+{% block title %}Feedback | CaLLP{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'FooterPages/footer_pages.css' %}">{% endblock %}
+
+{% block content %}
+<article class="info-page" aria-labelledby="info-page-title">
+  <header class="info-page__header">
+    <p class="info-page__eyebrow">Help us improve</p>
+    <h1 class="info-page__title" id="info-page-title">Feedback</h1>
+    <p class="info-page__intro">We welcome your thoughts about CaLLP and its learning resources.</p>
+  </header>
+
+  <section class="info-page__panel" aria-labelledby="feedback-heading">
+    <h2 id="feedback-heading">Share your experience</h2>
+    <p>Feedback submission is not available yet. We're working toward making it easier for users to share suggestions.</p>
+    <div class="info-page__actions">
+      <a href="{% url 'contact-us' %}">Contact information</a>
+    </div>
+  </section>
+</article>
+{% endblock %}

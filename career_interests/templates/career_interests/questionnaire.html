@@ -8,6 +8,13 @@
     <link rel="stylesheet" href="{% static 'career_interests/questionnaire.css' %}">
 </head>
 <body>
+    <header class="questionnaire-header">
+        <a class="questionnaire-brand" href="{% url 'index' %}">Career &amp; Lifelong Learning Pathway</a>
+        <div class="questionnaire-header-actions">
+            <a class="home-button" href="{% url 'index' %}">Back to Home</a>
+            {% include "front_end/partials/account_dropdown.html" %}
+        </div>
+    </header>
     <main>
         <h1>Career interest questionnaire</h1>
 

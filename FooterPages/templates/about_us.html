@@ -1,0 +1,40 @@
+{% extends "front_end/base.html" %}
+{% load static %}
+
+{% block title %}About Us | CaLLP{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'FooterPages/footer_pages.css' %}">{% endblock %}
+
+{% block content %}
+<article class="info-page" aria-labelledby="info-page-title">
+  <header class="info-page__header">
+    <p class="info-page__eyebrow">About the project</p>
+    <h1 class="info-page__title" id="info-page-title">About Us</h1>
+    <p class="info-page__intro">
+      Career &amp; Lifelong Learning Pathway helps people explore career paths,
+      learning opportunities, and resources for professional growth.
+    </p>
+  </header>
+
+  <section class="info-page__panel" aria-labelledby="team-heading">
+    <h2 id="team-heading">Meet the team</h2>
+    <p>The CaLLP development team consists of four people:</p>
+    <ul class="info-page__team">
+      <li><strong>Roselie Freixas</strong><span>Project Manager, AWS Integration, and Documentation Lead</span></li>
+      <li><strong>Skyler Hunsinger</strong><span>Frontend Developer and UI/UX Designer</span></li>
+      <li><strong>Jerry Huang</strong><span>Quality Assurance and Testing Lead</span></li>
+      <li><strong>Clay Cordary</strong><span>Backend Developer and Database Administrator</span></li>
+    </ul>
+  </section>
+
+  <section class="info-page__panel" aria-labelledby="goal-heading">
+    <h2 id="goal-heading">Our goal</h2>
+    <p>
+      We built CaLLP to demonstrate our team's skills while making it easier
+      to discover career-related learning resources and explore new interests.
+    </p>
+    <div class="info-page__actions">
+      <a href="{% url 'index' %}">Explore collections</a>
+    </div>
+  </section>
+</article>
+{% endblock %}
