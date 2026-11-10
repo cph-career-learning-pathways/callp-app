@@ -1,65 +1,114 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>{% block title %}CaLLP | Student Dashboard{% endblock %}</title>
-  <link rel="stylesheet"
-        href="{% static 'css/global.css' %}" >
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CaLLP | Student Dashboard</title>
+  <link rel="stylesheet" href="{% static 'css/global.css' %}">
+  <link rel="stylesheet" href="{% static 'css/student_dashboard.css' %}">
+  <script src="{% static 'javascript/main.js' %}" defer></script>
+  <script src="{% static 'javascript/dashboard.js' %}" defer></script>
 </head>
-
-<body>
-
+<body class="student-dashboard-page">
   {% include "front_end/partials/topbar.html" %}
 
-  <section>
-    <h3>Daily streak</h3>
-    <p>{{ dashboard.streak }} days</p>
-  </section>
+  <div class="student-dashboard-layout" id="dashboard-app" data-mock="true">
+    <aside class="dashboard-sidebar" aria-label="Student navigation">
+      <div class="dashboard-profile">
+        <div class="dashboard-avatar" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="22" r="9"/><path d="M17 51v-5c0-8 7-13 15-13s15 5 15 13v5"/></svg>
+        </div>
+        
+        <h2>Alex Student</h2>
+        <p>Computer Science · Explorer</p>
+        <p>Level 8</p>
+        <div class="dashboard-xp-track" role="progressbar" aria-label="Level progress" aria-valuenow="300" aria-valuemin="0" aria-valuemax="500"><span style="width:60%"></span></div>
+        <p class="dashboard-xp-caption">300/500 XP</p>
+        <span class="dashboard-mock-label">Sample profile</span>
+      </div>
 
+      <nav class="dashboard-side-nav" aria-label="Main navigation">
+        <a href="{% url 'index' %}" class="dashboard-side-link"><span aria-hidden="true">⌂</span> Home</a>
+        <a href="{% url 'student_dashboard' %}" class="dashboard-side-link is-current" aria-current="page"><span aria-hidden="true">▦</span> Dashboard</a>
+        <a href="{% url 'resource_discovery' %}" class="dashboard-side-link"><span aria-hidden="true">⌕</span> Search</a>
+        <button type="button" class="dashboard-side-link dashboard-side-button" data-show-tab="saved"><span aria-hidden="true">♧</span> Saved</button>
+        <form method="post" action="{% url 'logout' %}" class="dashboard-logout-form">
+          {% csrf_token %}
+          <button type="submit" class="dashboard-side-link dashboard-side-button"><span aria-hidden="true">⇥</span> Logout</button>
+        </form>
+      </nav>
+      <p class="dashboard-sidebar-note">Your learning space</p>
+    </aside>
 
-  <div class="user-nav-panel">
-    <div class="left-user">
-    </div>
-    <div class="left-nav">
-        <ul>
-            <li>Home</li>
-            <li>Dashboard</li>
-            <li>Search</li>
-            <li>Saved</li>
-            <li>Logout</li>
-        </ul>
+    <div class="dashboard-main-area">
+      <nav class="dash-tabs" role="tablist" aria-label="Dashboard sections">
+        <button type="button" class="dash-tab is-active" role="tab" id="dash-tab-collections" aria-controls="dash-panel-collections" aria-selected="true" tabindex="0" data-tab="collections">My Collections</button>
+        <button type="button" class="dash-tab" role="tab" id="dash-tab-saved" aria-controls="dash-panel-saved" aria-selected="false" tabindex="-1" data-tab="saved">Saved</button>
+        <button type="button" class="dash-tab" role="tab" id="dash-tab-viewed" aria-controls="dash-panel-viewed" aria-selected="false" tabindex="-1" data-tab="viewed">Viewed</button>
+        <button type="button" class="dash-tab" role="tab" id="dash-tab-progress" aria-controls="dash-panel-progress" aria-selected="false" tabindex="-1" data-tab="progress">Progress</button>
+      </nav>
+
+      <main class="dashboard-content" id="dashboard-content">
+        <p class="dashboard-demo-notice">Dashboard preview · Data and changes are examples only; nothing is saved to your account.</p>
+
+        <section id="dash-panel-collections" role="tabpanel" aria-labelledby="dash-tab-collections" class="dash-panel" tabindex="0">
+          <div class="dashboard-section-heading">
+            <h1>My Collections</h1>
+            <button class="dashboard-action dashboard-action-primary" type="button" id="new-collection-button">+ Create Collection</button>
+          </div>
+          <p class="dashboard-section-subtitle">Collections you've put together for your learning goals.</p>
+          <div id="dashboard-collections" class="dashboard-collection-grid" aria-live="polite"></div>
+          <div class="dashboard-subsection-heading"><h2>Recommended</h2><p>Based on the resources in your collections</p></div>
+          <div id="dashboard-collection-recommendations" class="dashboard-resource-grid"></div>
+        </section>
+
+        <section id="dash-panel-saved" role="tabpanel" aria-labelledby="dash-tab-saved" class="dash-panel" tabindex="0" hidden>
+          <div class="dashboard-section-heading"><h1>Saved Resources</h1><span class="dashboard-small-count" id="saved-count"></span></div>
+          <p class="dashboard-section-subtitle">Resources you've bookmarked for later.</p>
+          <div id="dashboard-saved" class="dashboard-resource-grid"></div>
+          <div class="dashboard-subsection-heading"><h2>Recommended</h2><p>Based on your saved resources</p></div>
+          <div id="dashboard-saved-recommendations" class="dashboard-resource-grid"></div>
+        </section>
+
+        <section id="dash-panel-viewed" role="tabpanel" aria-labelledby="dash-tab-viewed" class="dash-panel" tabindex="0" hidden>
+          <div class="dashboard-section-heading"><h1>Recently Viewed</h1></div>
+          <p class="dashboard-section-subtitle">Resources you've opened through CaLLP.</p>
+          <div id="dashboard-viewed" class="dashboard-resource-grid"></div>
+        </section>
+
+        <section id="dash-panel-progress" role="tabpanel" aria-labelledby="dash-tab-progress" class="dash-panel" tabindex="0" hidden>
+          <div class="dashboard-section-heading"><h1>Progress</h1><span class="dashboard-small-count" id="progress-count"></span></div>
+          <p class="dashboard-section-subtitle">Update progress on resources you're working through.</p>
+          <div id="dashboard-progress" class="dashboard-progress-list"></div>
+          <div class="dashboard-subsection-heading"><h2>My Learning Pathways</h2><p>Follow a learning sequence at your own pace.</p></div>
+          <div id="dashboard-pathways" class="dashboard-pathway-grid"></div>
+        </section>
+      </main>
+
+      <footer class="dashboard-footer" aria-label="Useful learning links">
+        <a href="https://github.com/" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://www.linkedin.com/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        <a href="https://www.indeed.com/" target="_blank" rel="noopener noreferrer">Indeed</a>
+        <a href="https://www.coursera.org/" target="_blank" rel="noopener noreferrer">Coursera</a>
+        <a href="https://www.duolingo.com/" target="_blank" rel="noopener noreferrer">Duolingo</a>
+      </footer>
     </div>
   </div>
 
-  <main class="hero">
-    <div class="dash-tabs">
-    </div>
-
-    this is where the 4 different tab contents will be depending on selected tab
-
-    <section>
-      <h3>My Learning Pathways</h3>
-
-      {% for pathway in dashboard.pathways %}
-        <article>
-            <h4>{{ pathway.title }}</h4>
-            <progress
-                value="{{ pathway.progress }}"
-                max="100">
-            </progress>
-            <span>{{ pathway.progress }}%</span>
-        </article>
-      {% empty %}
-        <p>No learning pathways yet.</p>
-      {% endfor %}
-    </section>
-
-  </main>
-  <div class="bottom-nav">
-  </div>
-  
-  <script src="{% static 'javascript/main.js' %}" defer></script>
+  <dialog class="dashboard-dialog" id="collection-dialog" aria-labelledby="collection-dialog-title">
+    <form id="collection-form" class="dashboard-dialog-form">
+      <div class="dashboard-dialog-header"><h2 id="collection-dialog-title">Create collection</h2><button type="button" class="dashboard-dialog-close" data-close-dialog aria-label="Close">×</button></div>
+      <label for="collection-title">Collection name</label>
+      <input id="collection-title" name="title" maxlength="100" required placeholder="e.g. Interview Prep">
+      <label for="collection-description">Description (optional)</label>
+      <textarea id="collection-description" name="description" rows="3" maxlength="400"></textarea>
+      <label for="collection-visibility">Visibility</label>
+      <select id="collection-visibility" name="visibility"><option value="private">Private</option><option value="unlisted">Unlisted</option><option value="public">Public</option></select>
+      <p class="dashboard-dialog-hint">Mock mode: new collections exist only until you reload the page. Sharing permissions are not active yet.</p>
+      <div class="dashboard-dialog-actions"><button type="button" class="dashboard-action dashboard-action-outline" data-close-dialog>Cancel</button><button type="submit" class="dashboard-action dashboard-action-primary">Create collection</button></div>
+    </form>
+  </dialog>
+  <div class="dashboard-toast" id="dashboard-toast" role="status" aria-live="polite" hidden></div>
 </body>
 </html>

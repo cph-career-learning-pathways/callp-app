@@ -27,7 +27,7 @@ urlpatterns = [
     path("accounts/", include("accounts.urls")),
     path("interests/", include("career_interests.urls")),
     path("footer/", include("FooterPages.urls")),
-    # Front-end app
+    # Front-end app 
     path("", include("front_end.urls")),
     # Dashboard
     path("", include("student_dashboard.urls")),
