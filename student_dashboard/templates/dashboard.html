@@ -19,7 +19,7 @@
         <div class="dashboard-avatar" aria-hidden="true">
           <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="22" r="9"/><path d="M17 51v-5c0-8 7-13 15-13s15 5 15 13v5"/></svg>
         </div>
-        
+
         <h2>Alex Student</h2>
         <p>Computer Science · Explorer</p>
         <p>Level 8</p>
@@ -30,7 +30,7 @@
 
       <nav class="dashboard-side-nav" aria-label="Main navigation">
         <a href="{% url 'index' %}" class="dashboard-side-link"><span aria-hidden="true">⌂</span> Home</a>
-        <a href="{% url 'student_dashboard' %}" class="dashboard-side-link is-current" aria-current="page"><span aria-hidden="true">▦</span> Dashboard</a>
+        <a href="{% url 'dashboard_student' %}" class="dashboard-side-link is-current" aria-current="page"><span aria-hidden="true">▦</span> Dashboard</a>
         <a href="{% url 'resource_discovery' %}" class="dashboard-side-link"><span aria-hidden="true">⌕</span> Search</a>
         <button type="button" class="dashboard-side-link dashboard-side-button" data-show-tab="saved"><span aria-hidden="true">♧</span> Saved</button>
         <form method="post" action="{% url 'logout' %}" class="dashboard-logout-form">
