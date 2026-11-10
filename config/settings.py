@@ -34,6 +34,11 @@ ALLOWED_HOSTS = [
     "callp.dev",
 ]
 
+SECURE_PROXY_SSL_HEADER = (
+    "HTTP_X_FORWARDED_PROTO",
+    "https",
+)
+
 
 # Application definition
 
@@ -48,6 +53,7 @@ INSTALLED_APPS = [
     "front_end",
     "accounts",
     "career_interests",
+    "FooterPages",
 ]
 
 MIDDLEWARE = [

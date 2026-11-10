@@ -26,6 +26,7 @@ urlpatterns = [
     path("accounts/", include("django.contrib.auth.urls")),
     path("accounts/", include("accounts.urls")),
     path("interests/", include("career_interests.urls")),
+    path("footer/", include("FooterPages.urls")),
     # Front-end app
     path("", include("front_end.urls")),
 ]

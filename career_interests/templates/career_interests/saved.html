@@ -1,0 +1,43 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="refresh" content="5;url={% url 'index' %}">
+    <title>Interests saved | Career &amp; Lifelong Learning Pathway</title>
+    <link rel="stylesheet" href="{% static 'career_interests/questionnaire.css' %}">
+</head>
+<body>
+    <header class="questionnaire-header">
+        <a class="questionnaire-brand" href="{% url 'index' %}">Career &amp; Lifelong Learning Pathway</a>
+        <div class="questionnaire-header-actions">
+            <a class="home-button" href="{% url 'index' %}">Back to Home</a>
+            {% include "front_end/partials/account_dropdown.html" %}
+        </div>
+    </header>
+    <main class="confirmation-main">
+        <section class="panel confirmation-panel" role="status" aria-live="polite">
+            <span class="confirmation-check" aria-hidden="true">&#10003;</span>
+            <h1>Interests saved successfully</h1>
+            <p>Your career interests have been saved to your profile.</p>
+            <p class="hint">Returning to Home in <strong id="redirect-countdown">5</strong> seconds.</p>
+            <a class="home-button confirmation-home" href="{% url 'index' %}">Back to Home now</a>
+        </section>
+    </main>
+    <script>
+        (function () {
+            const countdown = document.getElementById('redirect-countdown');
+            let remaining = 5;
+            const timer = window.setInterval(function () {
+                remaining -= 1;
+                countdown.textContent = String(Math.max(remaining, 0));
+                if (remaining <= 0) {
+                    window.clearInterval(timer);
+                    window.location.replace("{% url 'index' %}");
+                }
+            }, 1000);
+        }());
+    </script>
+</body>
+</html>
