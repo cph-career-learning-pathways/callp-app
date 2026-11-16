@@ -77,13 +77,28 @@
         <div class="dashboard-pathway-track" role="progressbar" aria-label="${esc(p.title)} pathway progress" aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100"><span style="width:${percent}%"></span></div></article>`;
     }).join("") : '<div class="dashboard-empty">No learning pathways started yet.</div>';
   }
-  const renders = {collections: renderCollections, saved: renderSaved, viewed: renderViewed, progress: renderProgress};
   function showTab(tab, focus = false) {
-    if (!renders[tab]) return;
-    renders[tab]();
+    // Only the four supported dashboard tabs can trigger a renderer.
+    switch (tab) {
+      case "collections":
+        renderCollections();
+        break;
+      case "saved":
+        renderSaved();
+        break;
+      case "viewed":
+        renderViewed();
+        break;
+      case "progress":
+        renderProgress();
+        break;
+      default:
+        return false;
+    }
     $$('[data-tab]').forEach(b => {const active = b.dataset.tab === tab; b.classList.toggle("is-active", active); b.setAttribute("aria-selected", String(active)); b.tabIndex = active ? 0 : -1; if (active && focus) b.focus();});
     $$(".dash-panel").forEach(p => p.hidden = p.id !== `dash-panel-${tab}`);
     history.replaceState(null, "", `#${tab}`);
+    return true;
   }
   $$('[data-tab]').forEach(button => {
     button.addEventListener("click", () => showTab(button.dataset.tab));
@@ -95,7 +110,7 @@
     });
   });
   $$('[data-show-tab]').forEach(b => b.addEventListener("click", () => showTab(b.dataset.showTab)));
-  window.addEventListener("hashchange", () => {const tab = location.hash.slice(1); if (renders[tab]) showTab(tab);});
+  window.addEventListener("hashchange", () => showTab(location.hash.slice(1)));
   $("#dashboard-content").addEventListener("click", async event => {
     const link = event.target.closest('[data-visit]');
     if (link) { send("visit", {resource_id: link.dataset.visit}).catch(console.error); return; }
@@ -149,5 +164,8 @@
       location.hash = "collections"; location.reload();
     } catch (error) { toast(error.message); submit.disabled = false; }
   });
-  streakHeader(); showTab(renders[location.hash.slice(1)] ? location.hash.slice(1) : "collections");
+  streakHeader();
+  if (!showTab(location.hash.slice(1))) showTab("collections");
 })();
+
+
