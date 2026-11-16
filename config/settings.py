@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "accounts",
     "career_interests",
     "FooterPages",
+    "student_dashboard",
 ]
 
 MIDDLEWARE = [

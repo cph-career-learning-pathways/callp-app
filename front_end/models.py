@@ -98,6 +98,7 @@ class CareerResource(models.Model):
     price_model = models.ForeignKey(PriceModel, on_delete=models.DO_NOTHING, db_column='price_model_id', related_name='career_resources')
     other_metadata = models.JSONField(null=True, blank=True)
     is_active = models.CharField(max_length=1, choices=YES_NO, default='Y')
+    completion_xp = models.PositiveIntegerField(default=0)
 
     class Meta:
         managed = False
@@ -112,6 +113,9 @@ class CuratedCollection(models.Model):
     collection_add_date = models.DateTimeField()
     collection_up_date = models.DateTimeField(null=True, blank=True)
     is_active = models.CharField(max_length=1, choices=YES_NO, default='Y')
+    collection_type = models.CharField(max_length=20, default='general')
+    collection_visibility = models.CharField(max_length=10, default='private')
+    completion_xp = models.PositiveIntegerField(default=0)
 
     class Meta:
         managed = False
