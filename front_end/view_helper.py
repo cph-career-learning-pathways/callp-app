@@ -87,7 +87,7 @@ def _collection_queryset():
     ).order_by("sort_order").prefetch_related(
         Prefetch("resource__resource_categories", queryset=active_categories)
     )
-    return CuratedCollection.objects.filter(is_active="Y").prefetch_related(
+    return CuratedCollection.objects.filter(is_active="Y", collection_visibility="public",).prefetch_related(
         Prefetch("collection_resources", queryset=links)
     ).annotate(resource_count=Count(
         "collection_resources__resource", filter=Q(collection_resources__resource__is_active="Y"), distinct=True

@@ -179,10 +179,14 @@ def dashboard_student_api(request):
             try:
                 with transaction.atomic():
                     collection = CuratedCollection.objects.create(
-                        collection_id=secrets.token_hex(4).upper(), curator=account,
-                        collection_name=title, collection_description=description,
-                        collection_visibility=visibility, collection_type="general",
-                        collection_add_date=timezone.now(), is_active="Y",
+                        collection_id=f"{secrets.randbelow(100000000):08d}",
+                        curator=account,
+                        collection_name=title, 
+                        collection_description=description,
+                        collection_visibility=visibility, 
+                        collection_type="general",
+                        collection_add_date=timezone.now(), 
+                        is_active="Y",
                     )
                 return JsonResponse({"id": collection.collection_id})
             except IntegrityError:
