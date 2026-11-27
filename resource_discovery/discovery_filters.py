@@ -29,6 +29,11 @@ def normalize_filters(filters=None):
         "career_fields": normalize_filter_values(
             filters.get("career_fields")
         ),
+        "prices": normalize_filter_values(filters.get("prices")),
+        "sources": normalize_filter_values(filters.get("sources")),
+        "resource_types": normalize_filter_values(filters.get("resource_types")),
+        "formats": normalize_filter_values(filters.get("formats")),
+        "difficulties": normalize_filter_values(filters.get("difficulties")),
     }
 
 

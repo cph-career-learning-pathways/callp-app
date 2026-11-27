@@ -14,7 +14,7 @@ from .resource_classifier import (
     classify_resource_type,
 )
 from .resource_normalizer import create_resource
-from .discovery_filters import build_discovery_query
+from .discovery_filters import build_discovery_query, normalize_filters
 from .youtube_parser import (
     extract_youtube_metadata,
     get_youtube_resource_type,
@@ -89,10 +89,25 @@ def search_brave(query):
             {
                 "title": result.get("title"),
                 "url": result.get("url"),
+                "description": result.get("description"),
             }
         )
 
     return candidates
+
+
+def extract_json_ld_description(soup):
+    """Find the first resource-level description in structured metadata."""
+    for block in soup.find_all("script", type="application/ld+json"):
+        try:
+            data = json.loads(block.get_text(strip=True))
+        except (ValueError, TypeError):
+            continue
+        for item in iter_json_ld_objects(data):
+            description = item.get("description")
+            if isinstance(description, str) and description.strip():
+                return description.strip()
+    return None
 
 
 def extract_json_ld_types(soup):
@@ -143,6 +158,40 @@ def extract_page_text(soup):
     )
 
 
+def fallback_resource(candidate):
+    """Preserve a search result when the publisher cannot be inspected."""
+    url = candidate.get("url")
+    if not url:
+        return None
+    hostname = (urlparse(url).hostname or "").removeprefix("www.")
+    return create_resource(
+        title=candidate.get("title"), url=url, source=hostname,
+        description=candidate.get("description"),
+    )
+
+
+def matches_discovery_filters(resource, filters):
+    """Strict matching for fields that normalized web results actually expose.
+
+    Unknown values never satisfy an explicitly selected filter. Skill, degree,
+    and career intent currently influence the search query only; no authoritative
+    per-result tags are available for those categories.
+    """
+    field_mapping = {
+        "prices": "pricing_model", "sources": "source",
+        "resource_types": "resource_type", "formats": "resource_format",
+        "difficulties": "difficulty",
+    }
+    for filter_name, field_name in field_mapping.items():
+        selected = {str(value).casefold().strip() for value in filters[filter_name]}
+        if not selected:
+            continue
+        actual = resource.get(field_name)
+        if actual is None or str(actual).casefold().strip() not in selected:
+            return False
+    return True
+
+
 def inspect_resource(candidate):
     url = candidate.get("url")
 
@@ -156,12 +205,12 @@ def inspect_resource(candidate):
         )
         resource_response.raise_for_status()
     except requests.RequestException:
-        return None
+        return fallback_resource(candidate)
 
     content_type = resource_response.headers.get("Content-Type", "")
 
     if "text/html" not in content_type:
-        return None
+        return fallback_resource(candidate)
 
     soup = BeautifulSoup(resource_response.content, "html.parser")
 
@@ -190,6 +239,9 @@ def inspect_resource(candidate):
 
     elif meta_description and meta_description.get("content"):
         description = meta_description.get("content").strip()
+
+    if not description:
+        description = extract_json_ld_description(soup) or candidate.get("description")
 
     json_ld_types = extract_json_ld_types(soup)
 
@@ -259,6 +311,7 @@ def search_resources(query="", filters=None):
     if not discovery_query:
         return []
 
+    normalized_filters = normalize_filters(filters)
     candidates = search_brave(discovery_query)
 
     if not candidates:
@@ -275,7 +328,9 @@ def search_resources(query="", filters=None):
         resources = [
             resource
             for resource in inspected_resources
-            if resource is not None
+            if resource is not None and matches_discovery_filters(
+                resource, normalized_filters
+            )
         ]
 
     return resources
