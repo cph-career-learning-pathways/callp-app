@@ -1,9 +1,21 @@
-
 {% extends "front_end/base.html" %}
+{% load static %}
 
 {% block title %}Resource Discovery{% endblock %}
 
+{% block page_styles %}
+<link rel="stylesheet" href="{% static 'css/discovery_loading.css' %}">
+{% endblock %}
+
 {% block content %}
+
+<div id="discovery-loading" class="discovery-loading" role="status" aria-live="polite" aria-label="Searching for learning resources" hidden>
+    <div class="discovery-loading-panel">
+        <span class="discovery-loading-spinner" aria-hidden="true"></span>
+        <p class="discovery-loading-title">Discovering learning resources...</p>
+        <p class="discovery-loading-description">Searching and gathering resource information. This may take a few seconds.</p>
+    </div>
+</div>
 
 <div class="catalog-header">
     <div class="catalog-heading">
@@ -51,4 +63,5 @@
 
 </section>
 
+<script src="{% static 'javascript/discovery_loading.js' %}" defer></script>
 {% endblock %}
