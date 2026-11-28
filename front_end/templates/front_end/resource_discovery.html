@@ -3,19 +3,7 @@
 
 {% block title %}Resource Discovery{% endblock %}
 
-{% block page_styles %}
-<link rel="stylesheet" href="{% static 'css/discovery_loading.css' %}">
-{% endblock %}
-
 {% block content %}
-
-<div id="discovery-loading" class="discovery-loading" role="status" aria-live="polite" aria-label="Searching for learning resources" hidden>
-    <div class="discovery-loading-panel">
-        <span class="discovery-loading-spinner" aria-hidden="true"></span>
-        <p class="discovery-loading-title">Discovering learning resources...</p>
-        <p class="discovery-loading-description">Searching and gathering resource information. This may take a few seconds.</p>
-    </div>
-</div>
 
 <div class="catalog-header">
     <div class="catalog-heading">
@@ -41,6 +29,10 @@
     </p>
 {% endif %}
 
+{% if 'free' in selected_prices or 'Free' in selected_prices %}
+<p class="discovery-pricing-note">Free results include resources with unverified pricing. Confirmed-free resources appear first; check access requirements before enrolling.</p>
+{% endif %}
+
 <section class="collection-grid">
 
     {% for resource in discovery_results %}
@@ -63,5 +55,4 @@
 
 </section>
 
-<script src="{% static 'javascript/discovery_loading.js' %}" defer></script>
 {% endblock %}

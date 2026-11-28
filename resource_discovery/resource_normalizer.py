@@ -1,3 +1,6 @@
+import html
+import re
+
 # ADDED as part of issue #32 resolution:
 # Define classifications permitted by the existing database schema.
 RESOURCE_TYPES = {
@@ -21,6 +24,21 @@ PRICING_MODELS = {
     "unknown",
     "varies",
 }
+
+def clean_metadata_text(value):
+    """Decode HTML entities and remove markup in publisher/search snippets."""
+    if not isinstance(value, str):
+        return None
+    text = value
+    for _ in range(3):
+        decoded = html.unescape(text)
+        if decoded == text:
+            break
+        text = decoded
+    # Remove actual HTML tags, but preserve ordinary angle-bracketed text.
+    text = re.sub(r"</?[A-Za-z][A-Za-z0-9:-]*(?:\s+[^<>]*?)?\s*/?>", " ", text)
+    text = re.sub(r"\s+([.,;:!?])", r"\1", text)
+    return normalize_whitespace(text)
 
 def normalize_whitespace(value):
     if value is None:
@@ -58,6 +76,7 @@ def create_resource(
         likes=None,
         upload_date=None,
         pricing_model=None,
+        difficulty=None,
 ):
     """Create a normalized resource dictionary for discovery results."""
     normalized_type = normalize_classification(
@@ -82,10 +101,11 @@ def create_resource(
         "creator": normalize_whitespace(creator),
         "resource_format": normalized_format,
         "resource_type": normalized_type,
-        "description": normalize_whitespace(description),
+        "description": clean_metadata_text(description),
         "duration_seconds": duration_seconds,
         "views": views,
         "likes": likes,
         "upload_date": upload_date,
         "pricing_model": normalized_pricing,
+        "difficulty": difficulty if difficulty in {"Beginner", "Intermediate", "Advanced"} else None,
     }

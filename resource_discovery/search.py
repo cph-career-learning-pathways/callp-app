@@ -12,6 +12,9 @@ from urllib.parse import urlparse
 from .resource_classifier import (
     classify_pricing_model,
     classify_resource_type,
+    classify_difficulty,
+    classify_structured_pricing,
+    classify_youtube_resource_type,
 )
 from .resource_normalizer import create_resource
 from .discovery_filters import build_discovery_query, normalize_filters
@@ -25,7 +28,7 @@ from .youtube_parser import (
 SEARCH_URL = "https://api.search.brave.com/res/v1/web/search"
 SEARCH_API_CANDIDATES = 20
 RESOURCE_REQUEST_TIMEOUT = 10
-MAX_INSPECTION_WORKERS = 5
+MAX_INSPECTION_WORKERS = 8
 
 
 # HELPER FUNCTIONS
@@ -135,6 +138,69 @@ def extract_json_ld_types(soup):
     return json_ld_types
 
 
+def extract_structured_objects(soup):
+    objects = []
+    for block in soup.find_all("script", type="application/ld+json"):
+        try:
+            objects.extend(iter_json_ld_objects(json.loads(block.get_text(strip=True))))
+        except (ValueError, TypeError):
+            continue
+    return objects
+
+
+def _schema_type_names(types):
+    return {str(t).rstrip("/").rsplit("/", 1)[-1].rsplit("#", 1)[-1]
+            for t in types if isinstance(t, str)}
+
+
+def classify_page_format(soup, json_ld_types, url, content_type):
+    """Classify the primary resource, not supplementary embedded media.
+
+    A VideoObject on an Article/BlogPosting page may describe an embedded clip.
+    A dedicated video page must provide video-specific primary-page evidence.
+    """
+    mime = (content_type or "").split(";", 1)[0].strip().lower()
+    path = urlparse(url).path.lower()
+    if mime == "application/pdf" or path.endswith(".pdf"):
+        return "document"
+    if mime.startswith("video/"):
+        return "video"
+    if mime.startswith("audio/"):
+        return None  # No audio value in the current database schema.
+
+    types = _schema_type_names(json_ld_types)
+    article_types = {"Article", "NewsArticle", "BlogPosting", "TechArticle",
+                     "ScholarlyArticle"}
+    if types & article_types:
+        return "webpage"
+
+    if soup is None:
+        return "webpage"
+
+    og_type = soup.find("meta", attrs={"property": "og:type"})
+    og_value = (og_type.get("content") or "").strip().casefold() if og_type else ""
+    if og_value.startswith("video.") or og_value == "video":
+        return "video"
+
+    # VideoObject alone is insufficient: many text tutorials embed videos.
+    # Require a dedicated video URL and structured video metadata together.
+    path_segments = [part for part in path.split("/") if part]
+    dedicated_video_path = any(part in {"video", "videos", "watch"}
+                               for part in path_segments)
+    if "VideoObject" in types and dedicated_video_path:
+        return "video"
+    return "webpage"
+
+
+def build_search_query_for_filters(query, normalized_filters):
+    """Prefer video candidates for video-only searches; still validate results."""
+    selected_formats = {str(value).strip().casefold()
+                        for value in normalized_filters["formats"]}
+    if selected_formats == {"video"}:
+        return f"{query} video".strip()
+    return query
+
+
 def extract_page_text(soup):
     main_tag = soup.find("main")
     article_tag = soup.find("article")
@@ -170,6 +236,18 @@ def fallback_resource(candidate):
     )
 
 
+def canonical_source(value):
+    """Normalize known provider labels and exact hostnames, not substrings."""
+    if value is None:
+        return None
+    name = str(value).strip().casefold()
+    if name in {"youtube", "youtube.com", "www.youtube.com", "m.youtube.com"}:
+        return "youtube"
+    if name.startswith("www."):
+        return name[4:]
+    return name
+
+
 def matches_discovery_filters(resource, filters):
     """Strict matching for fields that normalized web results actually expose.
 
@@ -187,7 +265,15 @@ def matches_discovery_filters(resource, filters):
         if not selected:
             continue
         actual = resource.get(field_name)
-        if actual is None or str(actual).casefold().strip() not in selected:
+        if filter_name == "sources":
+            selected = {canonical_source(value) for value in selected}
+            actual = canonical_source(actual)
+        elif actual is not None:
+            actual = str(actual).casefold().strip()
+        if filter_name == "prices" and actual is None and "free" in selected:
+            # Free discovery includes unknown pricing, but never known paid pricing.
+            continue
+        if actual is None or actual not in selected:
             return False
     return True
 
@@ -210,7 +296,12 @@ def inspect_resource(candidate):
     content_type = resource_response.headers.get("Content-Type", "")
 
     if "text/html" not in content_type:
-        return fallback_resource(candidate)
+        fallback = fallback_resource(candidate)
+        if fallback is not None:
+            fallback["resource_format"] = classify_page_format(
+                None, [], url, content_type
+            ) if "application/pdf" in content_type.lower() or "video/" in content_type.lower() else None
+        return fallback
 
     soup = BeautifulSoup(resource_response.content, "html.parser")
 
@@ -244,6 +335,7 @@ def inspect_resource(candidate):
         description = extract_json_ld_description(soup) or candidate.get("description")
 
     json_ld_types = extract_json_ld_types(soup)
+    structured_objects = extract_structured_objects(soup)
 
     # UPDATED as part of issue #32 resolution:
     #   Validate the hostname to prevent unrelated domains from
@@ -256,6 +348,8 @@ def inspect_resource(candidate):
 
         if youtube_type == "video":
             youtube_metadata = extract_youtube_metadata(soup)
+            # Video-specific player metadata is preferable to site-wide OG copy.
+            youtube_description = youtube_metadata.get("description") or description
 
             return create_resource(
                 title=title,
@@ -263,13 +357,14 @@ def inspect_resource(candidate):
                 source="YouTube",
                 creator=youtube_metadata["channel"],
                 resource_format="video",
-                resource_type=None,
-                description=description,
+                resource_type=classify_youtube_resource_type(title, youtube_description),
+                description=youtube_description,
                 duration_seconds=youtube_metadata["duration_seconds"],
                 views=youtube_metadata["view_count"],
                 likes=youtube_metadata["like_count"],
                 upload_date=youtube_metadata["upload_date"],
-                pricing_model=None,
+                pricing_model=youtube_metadata["pricing_model"],
+                difficulty=classify_difficulty(title, youtube_description),
             )
 
         # Playlist-specific normalization has not been implemented yet.
@@ -278,6 +373,10 @@ def inspect_resource(candidate):
     page_text = extract_page_text(soup)
 
     resource_type = classify_resource_type(json_ld_types)
+    learning_type = next((obj.get("learningResourceType") for obj in structured_objects
+                          if isinstance(obj.get("learningResourceType"), str)), None)
+    difficulty = classify_difficulty(title, description, learning_type)
+    resource_format = classify_page_format(soup, json_ld_types, url, content_type)
 
     pricing_model = classify_pricing_model(
         title=title,
@@ -286,13 +385,18 @@ def inspect_resource(candidate):
         json_ld_types=json_ld_types,
     )
 
+    structured_pricing = classify_structured_pricing(structured_objects)
+    if structured_pricing is not None:
+        pricing_model = structured_pricing
+
     return create_resource(
         title=title,
         url=url,
         source=hostname,
         creator=None,
-        resource_format="webpage",
+        resource_format=resource_format,
         resource_type=resource_type,
+        difficulty=difficulty,
         description=description,
         duration_seconds=None,
         views=None,
@@ -312,6 +416,9 @@ def search_resources(query="", filters=None):
         return []
 
     normalized_filters = normalize_filters(filters)
+    discovery_query = build_search_query_for_filters(
+        discovery_query, normalized_filters
+    )
     candidates = search_brave(discovery_query)
 
     if not candidates:
@@ -332,6 +439,10 @@ def search_resources(query="", filters=None):
                 resource, normalized_filters
             )
         ]
+
+    # Confirmed-free results first; retain Brave order within each group.
+    if "free" in {str(v).strip().casefold() for v in normalized_filters["prices"]}:
+        resources.sort(key=lambda resource: resource.get("pricing_model") is None)
 
     return resources
 

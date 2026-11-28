@@ -8,10 +8,19 @@
   <title>{% block title %}Career &amp; Lifelong Learning Pathway{% endblock %}</title>
   <link rel="stylesheet"
         href="{% static 'css/global.css' %}">
+  <link rel="stylesheet" href="{% static 'css/discovery_loading.css' %}">
   {% block page_styles %}{% endblock %}
 </head>
 
 <body>
+
+<div id="discovery-loading" class="discovery-loading" role="status" aria-live="polite" aria-label="Searching for learning resources" hidden>
+    <div class="discovery-loading-panel">
+        <span class="discovery-loading-spinner" aria-hidden="true"></span>
+        <p class="discovery-loading-title">Discovering learning resources...</p>
+        <p class="discovery-loading-description">Searching and gathering resource information. This may take a few seconds.</p>
+    </div>
+</div>
 
   {% include "front_end/partials/topbar.html" %}
   {% include "front_end/partials/leftbar.html" %}
@@ -29,5 +38,6 @@
   {% include "front_end/partials/footer.html" %}
 
   <script src="{% static 'javascript/main.js' %}" defer></script>
+  <script src="{% static 'javascript/discovery_loading.js' %}" defer></script>
 </body>
 </html>

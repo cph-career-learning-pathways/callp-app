@@ -82,7 +82,10 @@ def collect_pricing_evidence(
         combined_text,
     )
 
-    if free_course_pattern:
+    free_tutorial_pattern = re.search(
+        r"\bfree\b(?:\s+[\w-]+){0,3}\s+\btutorial\b", combined_text
+    )
+    if free_course_pattern or free_tutorial_pattern:
         evidence["explicit_free"] = True
 
     mixed_pricing_pattern = re.search(
@@ -119,16 +122,10 @@ def classify_pricing_model(
         or "CollectionPage" in json_ld_types
     )
 
-    has_primary_evidence = any(primary_evidence.values())
-
-    if has_primary_evidence:
-        evidence = primary_evidence
-
-    else:
-        # Use webpage text only when primary metadata is inconclusive.
-        evidence = collect_pricing_evidence(
-            page_text=page_text,
-        )
+    # Site-wide body text often contains unrelated subscription offers and ads.
+    # Never infer the resource's price from arbitrary page text.
+    # Explicit resource title/description or structured offers are required.
+    evidence = primary_evidence
 
     # Collections containing mixed access signals
     if is_collection:
@@ -210,4 +207,66 @@ def classify_resource_type(json_ld_types):
     if any(item_type in collection_types for item_type in json_ld_types):
         return "collection"
 
+    return None
+
+def classify_difficulty(title=None, description=None, learning_resource_type=None):
+    """Classify only explicit resource-level difficulty evidence."""
+    text = " ".join(str(v) for v in (title, description) if isinstance(v, str))
+    if isinstance(learning_resource_type, str):
+        text += " " + learning_resource_type
+    text = text.casefold()
+    matches = set()
+    if re.search(r"\b(beginner|beginners|introductory|introduction|fundamentals|novice)\b", text):
+        matches.add("Beginner")
+    if re.search(r"\bintermediate\b", text):
+        matches.add("Intermediate")
+    if re.search(r"\badvanced\b", text):
+        matches.add("Advanced")
+    return next(iter(matches)) if len(matches) == 1 else None
+
+
+def classify_structured_pricing(objects):
+    """Read explicit offer prices; avoid guessing from generic page copy."""
+    prices = []
+    for obj in objects:
+        if not isinstance(obj, dict):
+            continue
+        offers = obj.get("offers")
+        if isinstance(offers, dict):
+            offers = [offers]
+        if not isinstance(offers, list):
+            continue
+        for offer in offers:
+            if not isinstance(offer, dict):
+                continue
+            price = offer.get("price")
+            if price is None:
+                price = (offer.get("priceSpecification") or {}).get("price") if isinstance(offer.get("priceSpecification"), dict) else None
+            try:
+                prices.append(float(str(price).replace(",", "")))
+            except (ValueError, TypeError):
+                pass
+    if not prices:
+        return None
+    if any(v < 0 for v in prices):
+        return None
+    if all(v == 0 for v in prices):
+        return "free"
+    if all(v > 0 for v in prices):
+        return None  # A price alone does not establish a one-time purchase.
+    return "varies"
+
+
+def classify_youtube_resource_type(title=None, description=None):
+    """Classify explicit instructional courses/tutorials; otherwise stay unknown.
+
+    Do not infer a course from duration, the hosting platform, or generic
+    educational keywords such as 'learn' or 'lesson'.
+    """
+    title_text = title.strip() if isinstance(title, str) else ""
+    description_text = description.strip() if isinstance(description, str) else ""
+    if re.search(r"\b(full|complete|entire)\s+(?:[\w-]+\s+){0,3}course\b|\b(?:full|complete)\s+(?:[\w-]+\s+){0,3}tutorial\b|\b(?:course|tutorial)\s+(?:[\w-]+\s+){0,3}(?:for beginners|from scratch)\b", title_text, re.I):
+        return "course"
+    if re.search(r"\b(?:full|complete)\s+(?:[\w-]+\s+){0,3}course\b", description_text, re.I):
+        return "course"
     return None
