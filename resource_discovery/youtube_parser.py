@@ -98,9 +98,19 @@ def extract_youtube_metadata(soup):
         "view_count": None,
         "upload_date": None,
         "like_count": None,
+        "description": None,
+        "pricing_model": None,
     }
 
     if player_response is not None:
+        # A positive player status plus actual media streams is stronger
+        # evidence than an accessible watch-page URL alone.
+        playability = player_response.get("playabilityStatus") or {}
+        streams = player_response.get("streamingData") or {}
+        has_streams = bool(streams.get("formats") or streams.get("adaptiveFormats"))
+        if playability.get("status") == "OK" and has_streams:
+            metadata["pricing_model"] = "free"
+
         video_details = player_response.get("videoDetails", {})
 
         microformat = (
@@ -113,6 +123,7 @@ def extract_youtube_metadata(soup):
         views = video_details.get("viewCount")
 
         metadata["channel"] = video_details.get("author")
+        metadata["description"] = video_details.get("shortDescription") or microformat.get("description")
         metadata["duration_seconds"] = int(duration) if duration else None
         metadata["view_count"] = int(views) if views else None
         metadata["upload_date"] = microformat.get("uploadDate")

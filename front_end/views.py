@@ -122,6 +122,11 @@ def resource_discovery(request):
         search_state["skills"],
         search_state["degree_programs"],
         search_state["career_fields"],
+        search_state["prices"],
+        search_state["sources"],
+        search_state["resource_types"],
+        search_state["formats"],
+        search_state["difficulties"],
     ))
 
     discovery_attempted = bool(
@@ -140,6 +145,11 @@ def resource_discovery(request):
                 search_state["skills"],
                 search_state["degree_programs"],
                 search_state["career_fields"],
+                search_state["prices"],
+                search_state["sources"],
+                search_state["resource_types"],
+                search_state["formats"],
+                search_state["difficulties"],
             )
 
             web_cache = build_search_state(

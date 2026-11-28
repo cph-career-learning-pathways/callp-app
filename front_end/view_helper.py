@@ -138,6 +138,8 @@ def search_web_resources(
     selected_skills,
     selected_degree_programs,
     selected_career_fields,
+    selected_prices=(), selected_sources=(), selected_resource_types=(),
+    selected_formats=(), selected_difficulties=(),
     ):
     """Discover external learning resources without saving them to MySQL."""
 
@@ -147,6 +149,11 @@ def search_web_resources(
         "skills": selected_skills,
         "degree_programs": selected_degree_programs,
         "career_fields": selected_career_fields,
+        "prices": selected_prices,
+        "sources": selected_sources,
+        "resource_types": selected_resource_types,
+        "formats": selected_formats,
+        "difficulties": selected_difficulties,
     }
 
     resources = search_resources(

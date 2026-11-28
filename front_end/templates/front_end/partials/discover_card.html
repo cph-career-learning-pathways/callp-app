@@ -25,12 +25,16 @@
                 {{ resource.resource_type }}
             {% endif %}
 
-            {% if resource.resource_type and resource.pricing_model %}
-                ·
+            {% if resource.resource_type %}
+                {% if resource.pricing_model or 'free' in selected_prices or 'Free' in selected_prices %}
+                    ·
+                {% endif %}
             {% endif %}
 
             {% if resource.pricing_model %}
                 {{ resource.pricing_model }}
+            {% elif 'free' in selected_prices or 'Free' in selected_prices %}
+                Pricing unverified
             {% endif %}
         </span>
     </div>

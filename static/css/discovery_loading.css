@@ -1,0 +1,45 @@
+/* Resource Discovery: visible feedback during a full-page search request. */
+.discovery-loading[hidden] { display: none !important; }
+.discovery-loading {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgb(0 30 27 / 32%);
+}
+.discovery-loading-panel {
+    width: min(440px, 100%);
+    padding: 36px 28px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: 0 16px 48px rgb(0 30 27 / 20%);
+    text-align: center;
+}
+.discovery-loading-spinner {
+    display: block;
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 20px;
+    border: 5px solid var(--northern-sky);
+    border-top-color: var(--sea-glass);
+    border-radius: 50%;
+    animation: discovery-loading-rotate .8s linear infinite;
+}
+.discovery-loading-title {
+    margin: 0 0 10px;
+    color: var(--old-growth-green);
+    font: 700 23px/1.25 Georgia, serif;
+}
+.discovery-loading-description {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.5;
+}
+@keyframes discovery-loading-rotate { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+    .discovery-loading-spinner { animation: none; }
+}

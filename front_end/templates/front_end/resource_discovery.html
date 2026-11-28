@@ -1,5 +1,5 @@
-
 {% extends "front_end/base.html" %}
+{% load static %}
 
 {% block title %}Resource Discovery{% endblock %}
 
@@ -27,6 +27,10 @@
     <p class="discovery-error">
         {{ discovery_error }}
     </p>
+{% endif %}
+
+{% if 'free' in selected_prices or 'Free' in selected_prices %}
+<p class="discovery-pricing-note">Free results include resources with unverified pricing. Confirmed-free resources appear first; check access requirements before enrolling.</p>
 {% endif %}
 
 <section class="collection-grid">
